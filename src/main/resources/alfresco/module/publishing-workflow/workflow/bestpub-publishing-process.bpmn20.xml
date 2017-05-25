@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+             typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath"
+             targetNamespace="http://www.activiti.org/test">
+    <process id="bestpub-publishing-process" name="Best Publishing Process" isExecutable="true">
+        <endEvent id="endevent1" name="End"></endEvent>
+        <parallelGateway id="forkProcessingOfContentAndMetadata"
+                         name="Fork Processing of Content and Metadata"></parallelGateway>
+        <startEvent id="alfrescoStartevent1" name="Alfresco start" activiti:formKey="wf:submitAdhocTask"></startEvent>
+        <sequenceFlow id="flow1" sourceRef="alfrescoStartevent1"
+                      targetRef="forkProcessingOfContentAndMetadata"></sequenceFlow>
+        <serviceTask id="checkForContentFromProductionT5Task"
+                     name="T5: Check for Content From Production"></serviceTask>
+        <serviceTask id="setupChapterListT2Task" name="T2: Set up chapter list based on Metadata ZIP"></serviceTask>
+        <sequenceFlow id="processMetadata" name="Process Metadata" sourceRef="forkProcessingOfContentAndMetadata"
+                      targetRef="verifyMainBookMetadataT1Task"></sequenceFlow>
+        <sequenceFlow id="processContent" name="Process Content " sourceRef="forkProcessingOfContentAndMetadata"
+                      targetRef="checkForContentFromProductionT5Task"></sequenceFlow>
+        <userTask id="verifyMainBookMetadataT1Task" name="T1: Verify Main Book Metadata"></userTask>
+        <sequenceFlow id="flow4" sourceRef="verifyMainBookMetadataT1Task"
+                      targetRef="setupChapterListT2Task"></sequenceFlow>
+        <serviceTask id="createFolderHierarchyForISBNT3Task" name="T3: Create Folder Hierarchy for ISBN"></serviceTask>
+        <boundaryEvent id="escalateVerifyBookMetadataTimer" name="Escalate Verify Book Metadata TImer"
+                       attachedToRef="verifyMainBookMetadataT1Task" cancelActivity="true">
+            <timerEventDefinition></timerEventDefinition>
+        </boundaryEvent>
+        <sequenceFlow id="escalateVerifyBookMetadata" name="Escalate Verify Book Metadata"
+                      sourceRef="escalateVerifyBookMetadataTimer"
+                      targetRef="verifyMainBookMetadataT1Task"></sequenceFlow>
+        <sequenceFlow id="flow5" sourceRef="setupChapterListT2Task"
+                      targetRef="createFolderHierarchyForISBNT3Task"></sequenceFlow>
+        <serviceTask id="setChapterFolderMetadataT4Task" name="T4: Set Chapter Folder Metadata"></serviceTask>
+        <sequenceFlow id="flow6" sourceRef="createFolderHierarchyForISBNT3Task"
+                      targetRef="setChapterFolderMetadataT4Task"></sequenceFlow>
+        <exclusiveGateway id="isContentFoundGateway" name="Is Content Found "></exclusiveGateway>
+        <sequenceFlow id="flow7" sourceRef="checkForContentFromProductionT5Task"
+                      targetRef="isContentFoundGateway"></sequenceFlow>
+        <exclusiveGateway id="isFolderHierarchyPresentGateway" name="Is Folder Hierarchy Present"></exclusiveGateway>
+        <sequenceFlow id="contentWasFound" name="Content Was Found" sourceRef="isContentFoundGateway"
+                      targetRef="isFolderHierarchyPresentGateway"></sequenceFlow>
+        <scriptTask id="CheckForContentErrorMsgT7Task" name="T7: Check For Content Error Messages"
+                    activiti:autoStoreVariables="false"></scriptTask>
+        <sequenceFlow id="contentWasNotFound" name="Content Was Not Found" sourceRef="isContentFoundGateway"
+                      targetRef="CheckForContentErrorMsgT7Task"></sequenceFlow>
+        <userTask id="contentForISBNCouldNotBeFoundT8Task" name="T8: Content For ISBN could not be found"></userTask>
+        <exclusiveGateway id="isContentErrorMsgPresentGateway" name="Is Content Error Msg Present"></exclusiveGateway>
+        <sequenceFlow id="flow8" sourceRef="CheckForContentErrorMsgT7Task"
+                      targetRef="isContentErrorMsgPresentGateway"></sequenceFlow>
+        <sequenceFlow id="errorMsgFound" name="Error Message Found" sourceRef="isContentErrorMsgPresentGateway"
+                      targetRef="contentForISBNCouldNotBeFoundT8Task"></sequenceFlow>
+        <sequenceFlow id="noErrorMsg" name="No Error Message" sourceRef="isContentErrorMsgPresentGateway"
+                      targetRef="checkForContentWaitTimer"></sequenceFlow>
+        <intermediateCatchEvent id="checkForContentWaitTimer" name="Check For Content Wait Timer">
+            <timerEventDefinition></timerEventDefinition>
+        </intermediateCatchEvent>
+        <serviceTask id="moveContentToChapterFoldersT6Task" name="T6: Move Content To Chapter Folders"></serviceTask>
+        <sequenceFlow id="folderHierarchyExists" name="Folder Hierarchy Exists"
+                      sourceRef="isFolderHierarchyPresentGateway"
+                      targetRef="moveContentToChapterFoldersT6Task"></sequenceFlow>
+        <sequenceFlow id="flow9" sourceRef="contentForISBNCouldNotBeFoundT8Task"
+                      targetRef="checkForContentWaitTimer"></sequenceFlow>
+        <sequenceFlow id="folderHierarchyMissing" name="Folder Hierarchy Missing"
+                      sourceRef="isFolderHierarchyPresentGateway" targetRef="checkForContentWaitTimer"></sequenceFlow>
+        <sequenceFlow id="flow10" sourceRef="checkForContentWaitTimer"
+                      targetRef="checkForContentFromProductionT5Task"></sequenceFlow>
+        <parallelGateway id="joinContentAndMetadata" name="Join Content and Metadata"></parallelGateway>
+        <sequenceFlow id="flow11" sourceRef="moveContentToChapterFoldersT6Task"
+                      targetRef="joinContentAndMetadata"></sequenceFlow>
+        <sequenceFlow id="flow12" sourceRef="setChapterFolderMetadataT4Task"
+                      targetRef="joinContentAndMetadata"></sequenceFlow>
+        <serviceTask id="applyMetadataToAllContentFilesT9Task"
+                     name="T9: Apply Metadata to All Content Files"></serviceTask>
+        <sequenceFlow id="flow13" sourceRef="joinContentAndMetadata"
+                      targetRef="applyMetadataToAllContentFilesT9Task"></sequenceFlow>
+        <sequenceFlow id="flow14" sourceRef="applyMetadataToAllContentFilesT9Task" targetRef="endevent1"></sequenceFlow>
+    </process>
+    <bpmndi:BPMNDiagram id="BPMNDiagram_myProcess">
+        <bpmndi:BPMNPlane bpmnElement="myProcess" id="BPMNPlane_myProcess">
+            <bpmndi:BPMNShape bpmnElement="endevent1" id="BPMNShape_endevent1">
+                <omgdc:Bounds height="35.0" width="35.0" x="480.0" y="630.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="forkProcessingOfContentAndMetadata"
+                              id="BPMNShape_forkProcessingOfContentAndMetadata">
+                <omgdc:Bounds height="40.0" width="40.0" x="477.0" y="110.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="alfrescoStartevent1" id="BPMNShape_alfrescoStartevent1">
+                <omgdc:Bounds height="35.0" width="35.0" x="480.0" y="20.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="checkForContentFromProductionT5Task"
+                              id="BPMNShape_checkForContentFromProductionT5Task">
+                <omgdc:Bounds height="61.0" width="105.0" x="290.0" y="190.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="setupChapterListT2Task" id="BPMNShape_setupChapterListT2Task">
+                <omgdc:Bounds height="71.0" width="105.0" x="630.0" y="250.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="verifyMainBookMetadataT1Task" id="BPMNShape_verifyMainBookMetadataT1Task">
+                <omgdc:Bounds height="61.0" width="105.0" x="630.0" y="151.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="escalateVerifyBookMetadataTimer"
+                              id="BPMNShape_escalateVerifyBookMetadataTimer">
+                <omgdc:Bounds height="30.0" width="30.0" x="720.0" y="200.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="createFolderHierarchyForISBNT3Task"
+                              id="BPMNShape_createFolderHierarchyForISBNT3Task">
+                <omgdc:Bounds height="61.0" width="105.0" x="630.0" y="350.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="setChapterFolderMetadataT4Task"
+                              id="BPMNShape_setChapterFolderMetadataT4Task">
+                <omgdc:Bounds height="61.0" width="105.0" x="630.0" y="440.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="isContentFoundGateway" id="BPMNShape_isContentFoundGateway">
+                <omgdc:Bounds height="40.0" width="40.0" x="322.0" y="280.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="isFolderHierarchyPresentGateway"
+                              id="BPMNShape_isFolderHierarchyPresentGateway">
+                <omgdc:Bounds height="40.0" width="40.0" x="322.0" y="360.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="CheckForContentErrorMsgT7Task" id="BPMNShape_CheckForContentErrorMsgT7Task">
+                <omgdc:Bounds height="61.0" width="105.0" x="57.0" y="270.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="contentForISBNCouldNotBeFoundT8Task"
+                              id="BPMNShape_contentForISBNCouldNotBeFoundT8Task">
+                <omgdc:Bounds height="61.0" width="105.0" x="57.0" y="100.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="isContentErrorMsgPresentGateway"
+                              id="BPMNShape_isContentErrorMsgPresentGateway">
+                <omgdc:Bounds height="40.0" width="40.0" x="89.0" y="200.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="checkForContentWaitTimer" id="BPMNShape_checkForContentWaitTimer">
+                <omgdc:Bounds height="35.0" width="35.0" x="255.0" y="113.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="moveContentToChapterFoldersT6Task"
+                              id="BPMNShape_moveContentToChapterFoldersT6Task">
+                <omgdc:Bounds height="61.0" width="105.0" x="290.0" y="440.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="joinContentAndMetadata" id="BPMNShape_joinContentAndMetadata">
+                <omgdc:Bounds height="40.0" width="40.0" x="477.0" y="490.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="applyMetadataToAllContentFilesT9Task"
+                              id="BPMNShape_applyMetadataToAllContentFilesT9Task">
+                <omgdc:Bounds height="61.0" width="105.0" x="445.0" y="550.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
+                <omgdi:waypoint x="497.0" y="55.0"></omgdi:waypoint>
+                <omgdi:waypoint x="497.0" y="110.0"></omgdi:waypoint>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="processMetadata" id="BPMNEdge_processMetadata">
+                <omgdi:waypoint x="517.0" y="130.0"></omgdi:waypoint>
+                <omgdi:waypoint x="682.0" y="130.0"></omgdi:waypoint>
+                <omgdi:waypoint x="682.0" y="151.0"></omgdi:waypoint>
+                <bpmndi:BPMNLabel>
+                    <omgdc:Bounds height="13.0" width="100.0" x="549.0" y="113.0"></omgdc:Bounds>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="processContent" id="BPMNEdge_processContent">
+                <omgdi:waypoint x="477.0" y="130.0"></omgdi:waypoint>
+                <omgdi:waypoint x="342.0" y="131.0"></omgdi:waypoint>
+                <omgdi:waypoint x="342.0" y="190.0"></omgdi:waypoint>
+                <bpmndi:BPMNLabel>
+                    <omgdc:Bounds height="13.0" width="100.0" x="363.0" y="113.0"></omgdc:Bounds>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow4" id="BPMNEdge_flow4">
+                <omgdi:waypoint x="682.0" y="212.0"></omgdi:waypoint>
+                <omgdi:waypoint x="682.0" y="250.0"></omgdi:waypoint>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="escalateVerifyBookMetadata" id="BPMNEdge_escalateVerifyBookMetadata">
+                <omgdi:waypoint x="750.0" y="215.0"></omgdi:waypoint>
+                <omgdi:waypoint x="786.0" y="218.0"></omgdi:waypoint>
+                <omgdi:waypoint x="786.0" y="175.0"></omgdi:waypoint>
+                <omgdi:waypoint x="735.0" y="181.0"></omgdi:waypoint>
+                <bpmndi:BPMNLabel>
+                    <omgdc:Bounds height="39.0" width="100.0" x="790.0" y="174.0"></omgdc:Bounds>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow5" id="BPMNEdge_flow5">
+                <omgdi:waypoint x="682.0" y="321.0"></omgdi:waypoint>
+                <omgdi:waypoint x="682.0" y="350.0"></omgdi:waypoint>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow6" id="BPMNEdge_flow6">
+                <omgdi:waypoint x="682.0" y="411.0"></omgdi:waypoint>
+                <omgdi:waypoint x="682.0" y="440.0"></omgdi:waypoint>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow7" id="BPMNEdge_flow7">
+                <omgdi:waypoint x="342.0" y="251.0"></omgdi:waypoint>
+                <omgdi:waypoint x="342.0" y="280.0"></omgdi:waypoint>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="contentWasFound" id="BPMNEdge_contentWasFound">
+                <omgdi:waypoint x="342.0" y="320.0"></omgdi:waypoint>
+                <omgdi:waypoint x="342.0" y="360.0"></omgdi:waypoint>
+                <bpmndi:BPMNLabel>
+                    <omgdc:Bounds height="39.0" width="100.0" x="350.0" y="329.0"></omgdc:Bounds>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="contentWasNotFound" id="BPMNEdge_contentWasNotFound">
+                <omgdi:waypoint x="322.0" y="300.0"></omgdi:waypoint>
+                <omgdi:waypoint x="162.0" y="300.0"></omgdi:waypoint>
+                <bpmndi:BPMNLabel>
+                    <omgdc:Bounds height="39.0" width="100.0" x="181.0" y="266.0"></omgdc:Bounds>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow8" id="BPMNEdge_flow8">
+                <omgdi:waypoint x="109.0" y="270.0"></omgdi:waypoint>
+                <omgdi:waypoint x="109.0" y="240.0"></omgdi:waypoint>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="errorMsgFound" id="BPMNEdge_errorMsgFound">
+                <omgdi:waypoint x="109.0" y="200.0"></omgdi:waypoint>
+                <omgdi:waypoint x="109.0" y="161.0"></omgdi:waypoint>
+                <bpmndi:BPMNLabel>
+                    <omgdc:Bounds height="39.0" width="100.0" x="30.0" y="176.0"></omgdc:Bounds>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="noErrorMsg" id="BPMNEdge_noErrorMsg">
+                <omgdi:waypoint x="109.0" y="200.0"></omgdi:waypoint>
+                <omgdi:waypoint x="272.0" y="148.0"></omgdi:waypoint>
+                <bpmndi:BPMNLabel>
+                    <omgdc:Bounds height="13.0" width="100.0" x="109.0" y="200.0"></omgdc:Bounds>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="folderHierarchyExists" id="BPMNEdge_folderHierarchyExists">
+                <omgdi:waypoint x="342.0" y="400.0"></omgdi:waypoint>
+                <omgdi:waypoint x="342.0" y="440.0"></omgdi:waypoint>
+                <bpmndi:BPMNLabel>
+                    <omgdc:Bounds height="39.0" width="100.0" x="350.0" y="399.0"></omgdc:Bounds>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow9" id="BPMNEdge_flow9">
+                <omgdi:waypoint x="162.0" y="130.0"></omgdi:waypoint>
+                <omgdi:waypoint x="255.0" y="130.0"></omgdi:waypoint>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="folderHierarchyMissing" id="BPMNEdge_folderHierarchyMissing">
+                <omgdi:waypoint x="322.0" y="380.0"></omgdi:waypoint>
+                <omgdi:waypoint x="272.0" y="380.0"></omgdi:waypoint>
+                <omgdi:waypoint x="272.0" y="148.0"></omgdi:waypoint>
+                <bpmndi:BPMNLabel>
+                    <omgdc:Bounds height="39.0" width="100.0" x="181.0" y="350.0"></omgdc:Bounds>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow10" id="BPMNEdge_flow10">
+                <omgdi:waypoint x="290.0" y="130.0"></omgdi:waypoint>
+                <omgdi:waypoint x="342.0" y="132.0"></omgdi:waypoint>
+                <omgdi:waypoint x="342.0" y="190.0"></omgdi:waypoint>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow11" id="BPMNEdge_flow11">
+                <omgdi:waypoint x="395.0" y="470.0"></omgdi:waypoint>
+                <omgdi:waypoint x="497.0" y="470.0"></omgdi:waypoint>
+                <omgdi:waypoint x="497.0" y="490.0"></omgdi:waypoint>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow12" id="BPMNEdge_flow12">
+                <omgdi:waypoint x="630.0" y="470.0"></omgdi:waypoint>
+                <omgdi:waypoint x="497.0" y="470.0"></omgdi:waypoint>
+                <omgdi:waypoint x="497.0" y="490.0"></omgdi:waypoint>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow13" id="BPMNEdge_flow13">
+                <omgdi:waypoint x="497.0" y="530.0"></omgdi:waypoint>
+                <omgdi:waypoint x="497.0" y="550.0"></omgdi:waypoint>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow14" id="BPMNEdge_flow14">
+                <omgdi:waypoint x="497.0" y="611.0"></omgdi:waypoint>
+                <omgdi:waypoint x="497.0" y="630.0"></omgdi:waypoint>
+            </bpmndi:BPMNEdge>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</definitions>
