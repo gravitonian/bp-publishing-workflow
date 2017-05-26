@@ -6,23 +6,20 @@
              typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath"
              targetNamespace="http://www.activiti.org/test">
     <process id="bestpub-publishing-process" name="Best Publishing Process" isExecutable="true">
-        <endEvent id="endevent1" name="End"></endEvent>
-        <parallelGateway id="forkProcessingOfContentAndMetadata"
-                         name="Fork Processing of Content and Metadata"></parallelGateway>
         <startEvent id="alfrescoStartevent1" name="Alfresco start" activiti:formKey="wf:submitAdhocTask"></startEvent>
+
+        <!--- Fork into two processing routes for Metadata and Content -->
         <sequenceFlow id="flow1" sourceRef="alfrescoStartevent1"
                       targetRef="forkProcessingOfContentAndMetadata"></sequenceFlow>
-        <serviceTask id="checkForContentFromProductionT5Task"
-                     name="T5: Check for Content From Production"></serviceTask>
-        <serviceTask id="setupChapterListT2Task" name="T2: Set up chapter list based on Metadata ZIP"></serviceTask>
+        <parallelGateway id="forkProcessingOfContentAndMetadata"
+                         name="Fork Processing of Content and Metadata"></parallelGateway>
         <sequenceFlow id="processMetadata" name="Process Metadata" sourceRef="forkProcessingOfContentAndMetadata"
                       targetRef="verifyMainBookMetadataT1Task"></sequenceFlow>
         <sequenceFlow id="processContent" name="Process Content " sourceRef="forkProcessingOfContentAndMetadata"
                       targetRef="checkForContentFromProductionT5Task"></sequenceFlow>
+
+        <!-- Metadata processing route -->
         <userTask id="verifyMainBookMetadataT1Task" name="T1: Verify Main Book Metadata"></userTask>
-        <sequenceFlow id="flow4" sourceRef="verifyMainBookMetadataT1Task"
-                      targetRef="setupChapterListT2Task"></sequenceFlow>
-        <serviceTask id="createFolderHierarchyForISBNT3Task" name="T3: Create Folder Hierarchy for ISBN"></serviceTask>
         <boundaryEvent id="escalateVerifyBookMetadataTimer" name="Escalate Verify Book Metadata TImer"
                        attachedToRef="verifyMainBookMetadataT1Task" cancelActivity="true">
             <timerEventDefinition></timerEventDefinition>
@@ -30,52 +27,63 @@
         <sequenceFlow id="escalateVerifyBookMetadata" name="Escalate Verify Book Metadata"
                       sourceRef="escalateVerifyBookMetadataTimer"
                       targetRef="verifyMainBookMetadataT1Task"></sequenceFlow>
+        <sequenceFlow id="flow4" sourceRef="verifyMainBookMetadataT1Task"
+                      targetRef="setupChapterListT2Task"></sequenceFlow>
+        <serviceTask id="setupChapterListT2Task" name="T2: Set up chapter list based on Metadata ZIP"></serviceTask>
         <sequenceFlow id="flow5" sourceRef="setupChapterListT2Task"
                       targetRef="createFolderHierarchyForISBNT3Task"></sequenceFlow>
-        <serviceTask id="setChapterFolderMetadataT4Task" name="T4: Set Chapter Folder Metadata"></serviceTask>
+        <serviceTask id="createFolderHierarchyForISBNT3Task" name="T3: Create Folder Hierarchy for ISBN"></serviceTask>
         <sequenceFlow id="flow6" sourceRef="createFolderHierarchyForISBNT3Task"
                       targetRef="setChapterFolderMetadataT4Task"></sequenceFlow>
+        <serviceTask id="setChapterFolderMetadataT4Task" name="T4: Set Chapter Folder Metadata"></serviceTask>
+        <sequenceFlow id="flow12" sourceRef="setChapterFolderMetadataT4Task"
+                      targetRef="joinContentAndMetadata"></sequenceFlow>
+
+        <!-- Conetnt processing route -->
+        <serviceTask id="checkForContentFromProductionT5Task" name="T5: Check for Content From Production"></serviceTask>
+        <sequenceFlow id="flow7" sourceRef="checkForContentFromProductionT5Task" targetRef="isContentFoundGateway"></sequenceFlow>
         <exclusiveGateway id="isContentFoundGateway" name="Is Content Found "></exclusiveGateway>
-        <sequenceFlow id="flow7" sourceRef="checkForContentFromProductionT5Task"
-                      targetRef="isContentFoundGateway"></sequenceFlow>
-        <exclusiveGateway id="isFolderHierarchyPresentGateway" name="Is Folder Hierarchy Present"></exclusiveGateway>
         <sequenceFlow id="contentWasFound" name="Content Was Found" sourceRef="isContentFoundGateway"
                       targetRef="isFolderHierarchyPresentGateway"></sequenceFlow>
-        <scriptTask id="CheckForContentErrorMsgT7Task" name="T7: Check For Content Error Messages"
-                    activiti:autoStoreVariables="false"></scriptTask>
         <sequenceFlow id="contentWasNotFound" name="Content Was Not Found" sourceRef="isContentFoundGateway"
                       targetRef="CheckForContentErrorMsgT7Task"></sequenceFlow>
-        <userTask id="contentForISBNCouldNotBeFoundT8Task" name="T8: Content For ISBN could not be found"></userTask>
-        <exclusiveGateway id="isContentErrorMsgPresentGateway" name="Is Content Error Msg Present"></exclusiveGateway>
+        <exclusiveGateway id="isFolderHierarchyPresentGateway" name="Is Folder Hierarchy Present"></exclusiveGateway>
+        <sequenceFlow id="folderHierarchyExists" name="Folder Hierarchy Exists"
+                      sourceRef="isFolderHierarchyPresentGateway"
+                      targetRef="moveContentToChapterFoldersT6Task"></sequenceFlow>
+        <sequenceFlow id="folderHierarchyMissing" name="Folder Hierarchy Missing"
+                      sourceRef="isFolderHierarchyPresentGateway" targetRef="checkForContentWaitTimer"></sequenceFlow>
+        <serviceTask id="moveContentToChapterFoldersT6Task" name="T6: Move Content To Chapter Folders"></serviceTask>
+        <sequenceFlow id="flow11" sourceRef="moveContentToChapterFoldersT6Task"
+                      targetRef="joinContentAndMetadata"></sequenceFlow>
+        <scriptTask id="CheckForContentErrorMsgT7Task" name="T7: Check For Content Error Messages"
+                    activiti:autoStoreVariables="false"></scriptTask>
         <sequenceFlow id="flow8" sourceRef="CheckForContentErrorMsgT7Task"
                       targetRef="isContentErrorMsgPresentGateway"></sequenceFlow>
+        <exclusiveGateway id="isContentErrorMsgPresentGateway" name="Is Content Error Msg Present"></exclusiveGateway>
         <sequenceFlow id="errorMsgFound" name="Error Message Found" sourceRef="isContentErrorMsgPresentGateway"
                       targetRef="contentForISBNCouldNotBeFoundT8Task"></sequenceFlow>
         <sequenceFlow id="noErrorMsg" name="No Error Message" sourceRef="isContentErrorMsgPresentGateway"
                       targetRef="checkForContentWaitTimer"></sequenceFlow>
+        <userTask id="contentForISBNCouldNotBeFoundT8Task" name="T8: Content For ISBN could not be found"></userTask>
+        <sequenceFlow id="flow9" sourceRef="contentForISBNCouldNotBeFoundT8Task" targetRef="checkForContentWaitTimer"></sequenceFlow>
         <intermediateCatchEvent id="checkForContentWaitTimer" name="Check For Content Wait Timer">
             <timerEventDefinition></timerEventDefinition>
         </intermediateCatchEvent>
-        <serviceTask id="moveContentToChapterFoldersT6Task" name="T6: Move Content To Chapter Folders"></serviceTask>
-        <sequenceFlow id="folderHierarchyExists" name="Folder Hierarchy Exists"
-                      sourceRef="isFolderHierarchyPresentGateway"
-                      targetRef="moveContentToChapterFoldersT6Task"></sequenceFlow>
-        <sequenceFlow id="flow9" sourceRef="contentForISBNCouldNotBeFoundT8Task"
-                      targetRef="checkForContentWaitTimer"></sequenceFlow>
-        <sequenceFlow id="folderHierarchyMissing" name="Folder Hierarchy Missing"
-                      sourceRef="isFolderHierarchyPresentGateway" targetRef="checkForContentWaitTimer"></sequenceFlow>
         <sequenceFlow id="flow10" sourceRef="checkForContentWaitTimer"
                       targetRef="checkForContentFromProductionT5Task"></sequenceFlow>
+
+        <!-- Join together Metadata and Content Processing -->
         <parallelGateway id="joinContentAndMetadata" name="Join Content and Metadata"></parallelGateway>
-        <sequenceFlow id="flow11" sourceRef="moveContentToChapterFoldersT6Task"
-                      targetRef="joinContentAndMetadata"></sequenceFlow>
-        <sequenceFlow id="flow12" sourceRef="setChapterFolderMetadataT4Task"
-                      targetRef="joinContentAndMetadata"></sequenceFlow>
-        <serviceTask id="applyMetadataToAllContentFilesT9Task"
-                     name="T9: Apply Metadata to All Content Files"></serviceTask>
         <sequenceFlow id="flow13" sourceRef="joinContentAndMetadata"
                       targetRef="applyMetadataToAllContentFilesT9Task"></sequenceFlow>
+
+        <!-- Apply metadata to all book content -->
+        <serviceTask id="applyMetadataToAllContentFilesT9Task"
+                     name="T9: Apply Metadata to All Content Files"></serviceTask>
         <sequenceFlow id="flow14" sourceRef="applyMetadataToAllContentFilesT9Task" targetRef="endevent1"></sequenceFlow>
+
+        <endEvent id="endevent1" name="End"></endEvent>
     </process>
     <bpmndi:BPMNDiagram id="BPMNDiagram_myProcess">
         <bpmndi:BPMNPlane bpmnElement="myProcess" id="BPMNPlane_myProcess">
