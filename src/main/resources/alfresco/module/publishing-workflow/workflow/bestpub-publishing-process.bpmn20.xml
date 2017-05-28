@@ -6,7 +6,7 @@
              typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath"
              targetNamespace="http://www.activiti.org/test">
     <process id="bestpub-publishing-process" name="Best Publishing Process" isExecutable="true">
-        <startEvent id="alfrescoStartevent1" name="Alfresco start" activiti:formKey="wf:submitAdhocTask"></startEvent>
+        <startEvent id="alfrescoStartevent1" name="Alfresco start" activiti:formKey="bookpubw:startPublishTask"></startEvent>
 
         <!--- Fork into two processing routes for Metadata and Content -->
         <sequenceFlow id="flow1" sourceRef="alfrescoStartevent1"
@@ -19,16 +19,64 @@
                       targetRef="checkForContentFromProductionT5Task"></sequenceFlow>
 
         <!-- Metadata processing route -->
-        <userTask id="verifyMainBookMetadataT1Task" name="T1: Verify Main Book Metadata"></userTask>
+
+        <!-- Lecture T1 -->
+        <userTask id="verifyMainBookMetadataT1Task" name="T1: Verify Main Book Metadata"
+                  activiti:candidateGroups="GROUP_BESTPUB_COLLABORATORS"
+                  activiti:formKey="boppw:verifyMainBookMetadataT1Task">
+            <extensionElements>
+                <activiti:taskListener event="create" class="org.alfresco.repo.workflow.activiti.tasklistener.ScriptTaskListener">
+                    <activiti:field name="script">
+                        <activiti:string><![CDATA[
+                        var isEscalated = execution.getVariable('T1Escalated');
+                        var isbn = execution.getVariable('relatedISBN');
+                        var bookTitle = execution.getVariable('bookpub_bookTitle');
+                        var bookGenre = execution.getVariable('bookpub_bookGenre');
+                        var bookAuthors = execution.getVariable('bookpub_bookAuthors');
+                        var nrOfPages = execution.getVariable('bookpub_nrOfPages');
+
+                    <show id="bookpub:nrOfPages" for-mode="view"/>
+                    <show id="bookpub:nrOfChapters
+
+                        var taskDescription = "Verify Book Metadata for " + isbn;
+                        if (typeof isEscalated != 'undefined' && isEscalated == true) {
+                            taskDescription = "ESCALATED: " + taskDescription;
+                        }
+                        task.description = taskDescription;
+                        if (typeof isbn != 'undefined') task.setVariable('bookpub_ISBN', isbn); else task.setVariable('bookpub_ISBN', "Unknown");
+                        if (typeof bookTitle != 'undefined') task.setVariable('bookpub_bookTitle', bookTitle); else task.setVariable('bookpub_bookTitle', "Unknown");]]></activiti:string>
+                    </activiti:field>
+                </activiti:taskListener>
+                <activiti:taskListener event="complete" class="org.alfresco.repo.workflow.activiti.tasklistener.ScriptTaskListener">
+                    <activiti:field name="script">
+                        <activiti:string><![CDATA[
+
+                			execution.setVariable('boppc_bookSubjectName', task.getVariable('boppc_bookSubjectName'));
+                			execution.setVariable('bookpubw_publishingDate', task.getVariable('bookpubw_publishingDate'));
+                			execution.setVariable('boppw_nrOfChapters', task.getVariable('boppc_nrOfChapters'));
+                			execution.setVariable('currentEAUser', person);]]></activiti:string>
+                    </activiti:field>
+                </activiti:taskListener>
+            </extensionElements>
+        </userTask>
         <boundaryEvent id="escalateVerifyBookMetadataTimer" name="Escalate Verify Book Metadata TImer"
                        attachedToRef="verifyMainBookMetadataT1Task" cancelActivity="true">
-            <timerEventDefinition></timerEventDefinition>
+            <timerEventDefinition>${InterruptT1TimerDuration}</timerEventDefinition>
         </boundaryEvent>
         <sequenceFlow id="escalateVerifyBookMetadata" name="Escalate Verify Book Metadata"
                       sourceRef="escalateVerifyBookMetadataTimer"
-                      targetRef="verifyMainBookMetadataT1Task"></sequenceFlow>
+                      targetRef="verifyMainBookMetadataT1Task">
+            <extensionElements>
+                <activiti:executionListener event="take" class="org.alfresco.repo.workflow.activiti.listener.ScriptExecutionListener">
+                    <activiti:field name="script">
+                        <activiti:string><![CDATA[execution.setVariable('T1Escalated', true);]]></activiti:string>
+                    </activiti:field>
+                </activiti:executionListener>
+            </extensionElements>
+        </sequenceFlow>
         <sequenceFlow id="flow4" sourceRef="verifyMainBookMetadataT1Task"
                       targetRef="setupChapterListT2Task"></sequenceFlow>
+        <!-- END Lecture T1 -->
         <serviceTask id="setupChapterListT2Task" name="T2: Set up chapter list based on Metadata ZIP"></serviceTask>
         <sequenceFlow id="flow5" sourceRef="setupChapterListT2Task"
                       targetRef="createFolderHierarchyForISBNT3Task"></sequenceFlow>

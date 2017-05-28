@@ -1,26 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<model name="acmew:workflowModel" xmlns="http://www.alfresco.org/model/dictionary/1.0">
-    <!-- Optional meta-data about the model -->
-    <description>Sample Workflow Model</description>
-    <author>My Name</author>
+<model xmlns="http://www.alfresco.org/model/dictionary/1.0"
+    name="bookpubw:book_publishing_workflow">
+    <description>This custom content model defines new types and aspects related to the publishing workflow.</description>
+    <author>Martin Bergljung</author>
     <version>1.0</version>
 
     <imports>
-        <!-- Import Alfresco Dictionary Definitions -->
-        <import uri="http://www.alfresco.org/model/dictionary/1.0" prefix="d"/>
         <!-- Import Alfresco Content Domain Model Definitions -->
         <import uri="http://www.alfresco.org/model/content/1.0" prefix="cm"/>
+        <!-- Import Alfresco Dictionary Definitions -->
+        <import uri="http://www.alfresco.org/model/dictionary/1.0" prefix="d"/>
         <!-- Import Alfresco Workflow Model Definitions -->
         <import uri="http://www.alfresco.org/model/bpm/1.0" prefix="bpm"/>
+        <!-- Import Best Publishing Content Model -->
+        <import uri="http://www.acme.org/model/content/publishing/1.0" prefix="bookpub"/>
     </imports>
 
-    <!-- Custom namespace for your domain -->
     <namespaces>
-        <namespace uri="http://www.acme.org/model/workflow/1.0" prefix="acmew"/>
+        <namespace uri="http://www.acme.org/model/workflow/publishing/1.0" prefix="bookpubw"/>
     </namespaces>
 
     <!-- ===============================================================================================================
         Constraints, Types, and Aspects go here...
         -->
+    <types>
+        <!-- Every workflow definition needs a start task -->
+        <type name="bookpubw:startPublishTask">
+            <parent>bpm:startTask</parent>
+            <mandatory-aspects>
+                <aspect>bpm:assignee</aspect>
+            </mandatory-aspects>
+        </type>
+
+        <!-- Base task for all Best Publishing workflow tasks -->
+        <type name="bookpubw:basePublishTask">
+            <parent>bpm:workflowTask</parent>
+            <properties>
+                <property name="bookpubw:publishingDate">
+                    <title>Publishing Date</title>
+                    <description>The date when this book will be published online</description>
+                    <type>d:date</type>
+                    <mandatory>true</mandatory>
+                </property>
+            </properties>
+            <mandatory-aspects>
+                <aspect>bookpub:bookInfo</aspect>
+            </mandatory-aspects>
+        </type>
+
+        <!-- T1 -->
+        <type name="boppw:verifyMainBookMetadataT1Task">
+            <parent>bookpubw:basePublishTask</parent>
+        </type>
+    </types>
 </model>
 
