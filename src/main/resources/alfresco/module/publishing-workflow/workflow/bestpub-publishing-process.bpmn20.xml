@@ -77,9 +77,14 @@
         <sequenceFlow id="flow4" sourceRef="verifyMainBookMetadataT1Task"
                       targetRef="setupChapterListT2Task"></sequenceFlow>
         <!-- END Lecture T1 -->
-        <serviceTask id="setupChapterListT2Task" name="T2: Set up chapter list based on Metadata ZIP"></serviceTask>
+
+        <!-- Lecture T2 -->
+        <serviceTask id="setupChapterListT2Task" name="T2: Set up chapter list based on Metadata ZIP"
+                     activiti:delegateExpression="${T2SetupChapterListDelegate}"></serviceTask>
         <sequenceFlow id="flow5" sourceRef="setupChapterListT2Task"
                       targetRef="createFolderHierarchyForISBNT3Task"></sequenceFlow>
+        <!-- END Lecture T2 -->
+
         <serviceTask id="createFolderHierarchyForISBNT3Task" name="T3: Create Folder Hierarchy for ISBN"></serviceTask>
         <sequenceFlow id="flow6" sourceRef="createFolderHierarchyForISBNT3Task"
                       targetRef="setChapterFolderMetadataT4Task"></sequenceFlow>

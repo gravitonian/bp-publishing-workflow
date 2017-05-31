@@ -21,8 +21,8 @@
           parent="baseJavaDelegate"
           class="uk.co.tandf.bopp.workflow.activiti.T2SetupChapterListDelegate"
           depends-on="activitiBeanRegistry">
-        <property name="workflowUtilsService" ref="uk.co.tandf.bopp.services.workflowUtilsService"/>
-        <property name="boppUtilsService" ref="uk.co.tandf.bopp.services.boppUtilsService" />
+        <property name="alfrescoWorkflowUtilsService" ref="uk.co.tandf.bopp.services.alfrescoWorkflowUtilsService"/>
+        <property name="bestPubUtilsService" ref="uk.co.tandf.bopp.services.bestPubUtilsService" />
     </bean>
 
     <!-- Task T3 delegate bean -->
@@ -31,7 +31,7 @@
           class="uk.co.tandf.bopp.workflow.activiti.T3CreateFolderHierarchyDelegate"
           depends-on="activitiBeanRegistry">
           <property name="createChapterFolder" ref="uk.co.tandf.bopp.services.createChapterFolderService" />
-        <property name="workflowUtilsService" ref="uk.co.tandf.bopp.services.workflowUtilsService"/>
+        <property name="alfrescoWorkflowUtilsService" ref="uk.co.tandf.bopp.services.alfrescoWorkflowUtilsService"/>
     </bean>
 
     <!-- Task T4 delegate bean -->
@@ -40,8 +40,8 @@
           class="uk.co.tandf.bopp.workflow.activiti.T4SetupChapterFolderMetadata"
           depends-on="activitiBeanRegistry">
         <property name="alfrescoRepoUtilsService" ref="uk.co.tandf.bopp.services.alfrescoRepoUtilsService"/>
-        <property name="boppUtilsService" ref="uk.co.tandf.bopp.services.boppUtilsService" />
-        <property name="workflowUtilsService" ref="uk.co.tandf.bopp.services.workflowUtilsService"/>
+        <property name="bestPubUtilsService" ref="uk.co.tandf.bopp.services.bestPubUtilsService" />
+        <property name="alfrescoWorkflowUtilsService" ref="uk.co.tandf.bopp.services.alfrescoWorkflowUtilsService"/>
         <property name="nodeService" ref="nodeService"/>
     </bean>
 
@@ -51,7 +51,7 @@
           class="uk.co.tandf.bopp.workflow.activiti.T7CheckAdditionalMetadata"
           depends-on="activitiBeanRegistry">
         <property name="alfrescoRepoUtilsService" ref="uk.co.tandf.bopp.services.alfrescoRepoUtilsService"/>
-        <property name="workflowUtilsService" ref="uk.co.tandf.bopp.services.workflowUtilsService"/>
+        <property name="alfrescoWorkflowUtilsService" ref="uk.co.tandf.bopp.services.alfrescoWorkflowUtilsService"/>
         <property name="nodeService" ref="nodeService"/>
     </bean>
 
@@ -70,7 +70,7 @@
           class="uk.co.tandf.bopp.workflow.activiti.T10MoveContentToChapterFoldersDelegate"
           depends-on="activitiBeanRegistry">
         <property name="alfrescoRepoUtilsService" ref="uk.co.tandf.bopp.services.alfrescoRepoUtilsService"/>
-        <property name="boppUtilsService" ref="uk.co.tandf.bopp.services.boppUtilsService" />
+        <property name="bestPubUtilsService" ref="uk.co.tandf.bopp.services.bestPubUtilsService" />
         <property name="nodeService" ref="nodeService"/>
     </bean>
 

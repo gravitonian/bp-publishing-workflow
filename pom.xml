@@ -70,6 +70,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- ADDED -->
+        <dependency>
+            <groupId>org.acme.bestpublishing</groupId>
+            <artifactId>utils</artifactId>
+            <version>${bestpublishing.utils.version}</version>
+        </dependency>
+
     </dependencies>
 
     <build>
