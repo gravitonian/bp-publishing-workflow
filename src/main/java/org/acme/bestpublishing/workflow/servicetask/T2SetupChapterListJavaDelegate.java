@@ -17,8 +17,6 @@ limitations under the License.
 package org.acme.bestpublishing.workflow.servicetask;
 
 import org.acme.bestpublishing.model.BestPubMetadataFileModel;
-import org.acme.bestpublishing.services.AlfrescoWorkflowUtilsService;
-import org.acme.bestpublishing.services.BestPubUtilsService;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -40,25 +38,6 @@ import static org.acme.bestpublishing.model.BestPubWorkflowModel.*;
  */
 public class T2SetupChapterListJavaDelegate extends BestPubBaseJavaDelegate {
     private static final Logger LOG = LoggerFactory.getLogger(T2SetupChapterListJavaDelegate.class);
-
-    private final DateFormat publishingDateFormat = new SimpleDateFormat("dd/MM/YYYY");
-
-    /**
-     * BestPub utility services
-     */
-    private AlfrescoWorkflowUtilsService alfrescoWorkflowUtilsService;
-    private BestPubUtilsService bestPubUtilsService;
-
-    /**
-     * Spring dependency injection
-     */
-    public void setAlfrescoWorkflowUtilsService(AlfrescoWorkflowUtilsService alfrescoWorkflowUtilsService) {
-        this.alfrescoWorkflowUtilsService = alfrescoWorkflowUtilsService;
-    }
-
-    public void setBestPubUtilsService(BestPubUtilsService bestPubUtilsService) {
-        this.bestPubUtilsService = bestPubUtilsService;
-    }
 
     /**
      * Interface implementation
@@ -84,39 +63,35 @@ public class T2SetupChapterListJavaDelegate extends BestPubBaseJavaDelegate {
             return;
         }
 
-        // Put together a list of chapter metadata, exluding the entry for book metadata
+        // Separate book metadata from individual chapter metadata
+        Properties bookMetadata = null;
         List<Properties> chapterMetadataList = new ArrayList<>();
         for (Map.Entry<String, Properties> entry : allMetadata.entrySet()) {
             // Only add if it is not book metadata (i.e. {isbn} -> Properties), chapter metadata has keys like for
-            // example {isbn-chapter-1} -> Properties
-            if (entry.getKey().equalsIgnoreCase(isbn) == false) {
+            // example {isbn_chapter_1} -> Properties
+            if (entry.getKey().equalsIgnoreCase(isbn)) {
+                bookMetadata = entry.getValue();
+            } else {
                 chapterMetadataList.add(entry.getValue());
             }
         }
 
-        // Go through chapter metadata and extract Chapter Title, then use it to
-        // setup the complete chapter list for the book
-        Set<String> chapterTitles = new LinkedHashSet<String>(); // Keeping the order
-        for (Properties chapterMetadata : chapterMetadataList) {
-            String chapterTitle = (String)chapterMetadata.get(
-                    BestPubMetadataFileModel.CHAPTER_METADATA_TITLE_PROP_NAME);
-            chapterTitles.add(chapterTitle);
-            LOG.debug("Added chapter title [{}] for chapter number [{}] {}",
-                    new Object[]{chapterTitle, chapterMetadata.get(
-                            BestPubMetadataFileModel.CHAPTER_METADATA_NUMBER_PROP_NAME), processInfo});
+        if (chapterMetadataList.isEmpty()) {
+            LOG.error("Chapter list could not be setup, no chapter metadata was extracted {}", processInfo);
         }
-        setWorkflowVariable(exec, VAR_CHAPTER_LIST, chapterTitles, processInfo);
-        if (chapterTitles.isEmpty()) {
-            LOG.error("Chapter title list could not be setup, no chapter metadata was extracted {}", processInfo);
-        }
-        setWorkflowVariable(exec, VAR_BOOK_GENRE, allMetadata.get(isbn).get(
-                BestPubMetadataFileModel.BOOK_METADATA_GENRE_PROP_NAME), processInfo);
-        setWorkflowVariable(exec, VAR_CHAPTER_COUNT, chapterTitles.size(), processInfo);
 
-        // Set the Publishing date to now as a 'backlist' book has already been published
-        Date today = new Date();
-        setWorkflowVariable(exec, VAR_PUBLISHING_DATE, publishingDateFormat.format(today), processInfo);
+        // Check that we got the same number of chapters as specified in book metadata
+        String numberOfChaptersAsString = (String)bookMetadata.get(
+                BestPubMetadataFileModel.BOOK_METADATA_NR_OF_CHAPTERS_PROP_NAME);
+        int numberOfChapters = Integer.parseInt(numberOfChaptersAsString);
+        if (numberOfChapters != chapterMetadataList.size()) {
+            LOG.error("Book metadata specifies different number of chapters then was supplied " +
+                    "[Expected={}][Supplied={}]{}", numberOfChapters, chapterMetadataList.size(), processInfo);
+        }
+
+        setWorkflowVariable(exec, VAR_BOOK_INFO, bookMetadata, processInfo);
+        setWorkflowVariable(exec, VAR_CHAPTER_LIST, chapterMetadataList, processInfo);
+
+
     }
-
-
 }

@@ -16,6 +16,8 @@ limitations under the License.
 */
 package org.acme.bestpublishing.workflow.servicetask;
 
+import org.acme.bestpublishing.services.AlfrescoWorkflowUtilsService;
+import org.acme.bestpublishing.services.BestPubUtilsService;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.alfresco.repo.workflow.activiti.BaseJavaDelegate;
 import org.apache.commons.lang.StringUtils;
@@ -27,9 +29,26 @@ import static org.acme.bestpublishing.model.BestPubWorkflowModel.VAR_RELATED_ISB
  * Base Java Delegate class for Service Task Java Delegate implementations.
  * Contains a method for setting workflow variable that will always log this to the system log.
  *
- * @martin.bergljung@marversolutions.org
+ * @author martin.bergljung@marversolutions.org
  */
 public abstract class BestPubBaseJavaDelegate extends BaseJavaDelegate {
+
+    /**
+     * BestPub utility services
+     */
+    protected AlfrescoWorkflowUtilsService alfrescoWorkflowUtilsService;
+    protected BestPubUtilsService bestPubUtilsService;
+
+    /**
+     * Spring dependency injection
+     */
+    public void setAlfrescoWorkflowUtilsService(AlfrescoWorkflowUtilsService alfrescoWorkflowUtilsService) {
+        this.alfrescoWorkflowUtilsService = alfrescoWorkflowUtilsService;
+    }
+
+    public void setBestPubUtilsService(BestPubUtilsService bestPubUtilsService) {
+        this.bestPubUtilsService = bestPubUtilsService;
+    }
 
     public abstract Logger getLog();
 
