@@ -17,13 +17,12 @@ limitations under the License.
 package org.acme.bestpublishing.workflow.servicetask;
 
 import org.acme.bestpublishing.model.BestPubMetadataFileModel;
+import org.acme.bestpublishing.model.BestPubWorkflowModel;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static org.acme.bestpublishing.model.BestPubWorkflowModel.*;
@@ -81,7 +80,7 @@ public class T2SetupChapterListJavaDelegate extends BestPubBaseJavaDelegate {
         }
 
         // Check that we got the same number of chapters as specified in book metadata
-        String numberOfChaptersAsString = (String)bookMetadata.get(
+        String numberOfChaptersAsString = bookMetadata.getProperty(
                 BestPubMetadataFileModel.BOOK_METADATA_NR_OF_CHAPTERS_PROP_NAME);
         int numberOfChapters = Integer.parseInt(numberOfChaptersAsString);
         if (numberOfChapters != chapterMetadataList.size()) {
@@ -89,9 +88,9 @@ public class T2SetupChapterListJavaDelegate extends BestPubBaseJavaDelegate {
                     "[Expected={}][Supplied={}]{}", numberOfChapters, chapterMetadataList.size(), processInfo);
         }
 
-        setWorkflowVariable(exec, VAR_BOOK_INFO, bookMetadata, processInfo);
-        setWorkflowVariable(exec, VAR_CHAPTER_LIST, chapterMetadataList, processInfo);
+        setWorkflowVariable(exec, BestPubWorkflowModel.VAR_BOOK_INFO, bookMetadata, processInfo);
+        setWorkflowVariable(exec, BestPubWorkflowModel.VAR_CHAPTER_LIST, chapterMetadataList, processInfo);
 
-
+        LOG.debug("Finished T2 - Setting up chapter list {}", processInfo);
     }
 }

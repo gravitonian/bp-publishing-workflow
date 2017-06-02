@@ -16,7 +16,7 @@
         <sequenceFlow id="processMetadata" name="Process Metadata" sourceRef="forkProcessingOfContentAndMetadata"
                       targetRef="reviewBookInfoT1Task"></sequenceFlow>
         <sequenceFlow id="processContent" name="Process Content " sourceRef="forkProcessingOfContentAndMetadata"
-                      targetRef="checkForContentFromProductionT5Task"></sequenceFlow>
+                      targetRef="checkForContentFromProductionT4Task"></sequenceFlow>
 
         <!-- Metadata processing route -->
 
@@ -49,8 +49,7 @@
                         if (typeof bookAuthors != 'undefined') task.setVariable('bookpub_bookAuthors', bookAuthors); else task.setVariable('bookpub_bookAuthors', "Unknown");
                         if (typeof nrOfChapters != 'undefined') task.setVariable('bookpub_nrOfChapters', nrOfChapters);
                         if (typeof nrOfPages != 'undefined') task.setVariable('bookpub_nrOfPages', nrOfPages);
-                        if (typeof publishingDate != 'undefined') task.setVariable('bookpubw_publishingDate', publishingDate);
-]]></activiti:string>
+                        if (typeof publishingDate != 'undefined') task.setVariable('bookpubw_publishingDate', publishingDate);]]></activiti:string>
                     </activiti:field>
                 </activiti:taskListener>
                 <activiti:taskListener event="complete" class="org.alfresco.repo.workflow.activiti.tasklistener.ScriptTaskListener">
@@ -88,15 +87,16 @@
 
         <!-- Lecture T2 -->
         <serviceTask id="setupChapterListT2Task" name="T2: Set up chapter list based on Metadata ZIP"
-                     activiti:delegateExpression="${T2SetupChapterListDelegate}"></serviceTask>
+                     activiti:delegateExpression="${org.acme.bestpublishing.workflow.servicetask.t2SetupChapterListJavaDelegate}"></serviceTask>
         <sequenceFlow id="flow5" sourceRef="setupChapterListT2Task"
                       targetRef="createFolderHierarchyWithMetadataT3Task"></sequenceFlow>
         <!-- END Lecture T2 -->
 
         <!-- Lecture T3 -->
-        <serviceTask id="createFolderHierarchyWithMetadataT3Task" name="T3: Create Folder Hierarchy with Metadata"></serviceTask>
+        <serviceTask id="createFolderHierarchyWithMetadataT3Task" name="T3: Create Folder Hierarchy with Metadata"
+                     activiti:delegateExpression="${org.acme.bestpublishing.workflow.servicetask.t3SetupChapterListJavaDelegate}"></serviceTask>
         <sequenceFlow id="flow6" sourceRef="createFolderHierarchyWithMetadataT3Task" targetRef="joinContentAndMetadata"></sequenceFlow>
-        <!-- END Lecture T2 -->
+        <!-- END Lecture T3 -->
 
         <!-- Content processing route -->
         <serviceTask id="checkForContentFromProductionT4Task" name="T4: Check for Content From Production"></serviceTask>

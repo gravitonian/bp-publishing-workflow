@@ -1,9 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:util="http://www.springframework.org/schema/util"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
-       http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd">
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
     <!-- Adding beans we want to use in activiti:delegateExpression="....",
         note. the delegate expression has to be the class name without package -->
@@ -13,135 +11,25 @@
       automatically be registered with the activitiBeanRegistry and will
       have access to the serviceRegistry -->
 
-    <!-- Note. the injected Alfresco service beans are injected as non-transactional
-         so you keep the transaction and security context from the caller -->
+    <bean id="org.acme.bestpublishing.workflow.servicetask.baseJavaDelegate"
+          abstract="true"
+          parent="baseJavaDelegate"
+          depends-on="activitiBeanRegistry">
+        <property name="alfrescoRepoUtilsService" ref="org.acme.bestpublishing.services.alfrescoRepoUtilsService"/>
+        <property name="alfrescoWorkflowUtilsService" ref="org.acme.bestpublishing.services.alfrescoWorkflowUtilsService"/>
+        <property name="bestPubUtilsService" ref="org.acme.bestpublishing.services.bestPubUtilsService" />
+    </bean>
 
     <!-- Task T2 delegate bean -->
-    <bean id="t2SetupChapterListDelegate"
-          parent="baseJavaDelegate"
-          class="uk.co.tandf.bopp.workflow.activiti.T2SetupChapterListDelegate"
-          depends-on="activitiBeanRegistry">
-        <property name="alfrescoWorkflowUtilsService" ref="uk.co.tandf.bopp.services.alfrescoWorkflowUtilsService"/>
-        <property name="bestPubUtilsService" ref="uk.co.tandf.bopp.services.bestPubUtilsService" />
+    <bean id="org.acme.bestpublishing.workflow.servicetask.t2SetupChapterListJavaDelegate"
+          parent="org.acme.bestpublishing.workflow.servicetask.baseJavaDelegate"
+          class="org.acme.bestpublishing.workflow.servicetask.T2SetupChapterListJavaDelegate">
     </bean>
 
     <!-- Task T3 delegate bean -->
-    <bean id="t3CreateFolderHierarchyDelegate"
-          parent="baseJavaDelegate"
-          class="uk.co.tandf.bopp.workflow.activiti.T3CreateFolderHierarchyDelegate"
-          depends-on="activitiBeanRegistry">
-          <property name="createChapterFolder" ref="uk.co.tandf.bopp.services.createChapterFolderService" />
-        <property name="alfrescoWorkflowUtilsService" ref="uk.co.tandf.bopp.services.alfrescoWorkflowUtilsService"/>
+    <bean id="org.acme.bestpublishing.workflow.servicetask.t3SetupChapterListJavaDelegate"
+          parent="org.acme.bestpublishing.workflow.servicetask.baseJavaDelegate"
+          class="org.acme.bestpublishing.workflow.servicetask.T3SetupChapterListJavaDelegate">
     </bean>
 
-    <!-- Task T4 delegate bean -->
-    <bean id="t4SetupChapterFolderMetadata"
-          parent="baseJavaDelegate"
-          class="uk.co.tandf.bopp.workflow.activiti.T4SetupChapterFolderMetadata"
-          depends-on="activitiBeanRegistry">
-        <property name="alfrescoRepoUtilsService" ref="uk.co.tandf.bopp.services.alfrescoRepoUtilsService"/>
-        <property name="bestPubUtilsService" ref="uk.co.tandf.bopp.services.bestPubUtilsService" />
-        <property name="alfrescoWorkflowUtilsService" ref="uk.co.tandf.bopp.services.alfrescoWorkflowUtilsService"/>
-        <property name="nodeService" ref="nodeService"/>
-    </bean>
-
-	<!-- Task T7 delegate bean -->
-    <bean id="t7CheckAdditionalMetadata"
-          parent="baseJavaDelegate"
-          class="uk.co.tandf.bopp.workflow.activiti.T7CheckAdditionalMetadata"
-          depends-on="activitiBeanRegistry">
-        <property name="alfrescoRepoUtilsService" ref="uk.co.tandf.bopp.services.alfrescoRepoUtilsService"/>
-        <property name="alfrescoWorkflowUtilsService" ref="uk.co.tandf.bopp.services.alfrescoWorkflowUtilsService"/>
-        <property name="nodeService" ref="nodeService"/>
-    </bean>
-
-    <!-- Task T9 delegate bean -->
-    <bean id="t9CheckForProductionContent"
-          parent="baseJavaDelegate"
-          class="uk.co.tandf.bopp.workflow.activiti.T9CheckForProductionContentDelegate"
-          depends-on="activitiBeanRegistry">
-        <property name="alfrescoRepoUtilsService" ref="uk.co.tandf.bopp.services.alfrescoRepoUtilsService"/>
-        <property name="nodeService" ref="nodeService"/>
-    </bean>
-
-    <!-- Task T10 delegate bean -->
-    <bean id="t10MoveContentToChapterFoldersDelegate"
-          parent="baseJavaDelegate"
-          class="uk.co.tandf.bopp.workflow.activiti.T10MoveContentToChapterFoldersDelegate"
-          depends-on="activitiBeanRegistry">
-        <property name="alfrescoRepoUtilsService" ref="uk.co.tandf.bopp.services.alfrescoRepoUtilsService"/>
-        <property name="bestPubUtilsService" ref="uk.co.tandf.bopp.services.bestPubUtilsService" />
-        <property name="nodeService" ref="nodeService"/>
-    </bean>
-
-	<!-- Task T11 create event delegate bean -->
-	<bean id="t11CorrectFailedContentMatchingSpecificEATaskCreateListener"
-		class="uk.co.tandf.bopp.workflow.activiti.CorrectFailedContentMatchingCreateListener"
-		depends-on="activitiBeanRegistry">
-		<property name="namespaceService" ref="namespaceService" />
-		<property name="description" value="correctFailedContentMatching.formDescription" />
-	</bean>
-
-	<!-- Task T12 create event delegate bean -->
-	<bean id="t12EscalatedCorrectFailedContentMatchingTaskCreateListener"
-		class="uk.co.tandf.bopp.workflow.activiti.CorrectFailedContentMatchingCreateListener"
-		depends-on="activitiBeanRegistry">
-		<property name="namespaceService" ref="namespaceService" />
-		<property name="description" value="correctFailedContentMatchingEscaleted.formDescription" />
-	</bean>
-
-	<!-- Task T13 create event delegate bean -->
-	<bean id="t13CorrectFailedContentMatchingTaskCreateListener"
-		class="uk.co.tandf.bopp.workflow.activiti.CorrectFailedContentMatchingCreateListener"
-		depends-on="activitiBeanRegistry">
-		<property name="namespaceService" ref="namespaceService" />
-		<property name="description" value="correctFailedContentMatching.formDescription" />
-	</bean>
-	
-	<!-- Task T11, T12 and T13 complete event delegate bean -->
-	<bean id="correctFailedContentMatchingTaskCompleteListener"
-		class="uk.co.tandf.bopp.workflow.activiti.CorrectFailedContentMatchingCompleteListener"
-		depends-on="activitiBeanRegistry" />
-
-	<bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
-	    <property name="targetObject" ref="activitiBeanRegistry"/>
-	    <property name="targetMethod" value="putAll"/>
-	    <property name="arguments">
-	        <util:list>
-	            <util:map map-class="java.util.HashMap">
-	            	<entry key="t11CorrectFailedContentMatchingSpecificEATaskCreateListener" value-ref="t11CorrectFailedContentMatchingSpecificEATaskCreateListener" />
-					<entry key="t12EscalatedCorrectFailedContentMatchingTaskCreateListener" value-ref="t12EscalatedCorrectFailedContentMatchingTaskCreateListener" />
-					<entry key="t13CorrectFailedContentMatchingTaskCreateListener" value-ref="t13CorrectFailedContentMatchingTaskCreateListener" />
-					<entry key="correctFailedContentMatchingTaskCompleteListener" value-ref="correctFailedContentMatchingTaskCompleteListener" />
-	            </util:map>
-	        </util:list>
-	    </property>
-    </bean>
-    
-    <!-- Task T14 delegate bean -->
-    <bean id="t14ApplyMetadataToChapterFiles"
-          parent="baseJavaDelegate"
-          class="uk.co.tandf.bopp.workflow.activiti.T14ApplyMetadataToChapterFiles"
-          depends-on="activitiBeanRegistry">
-        <property name="alfrescoRepoUtilsService" ref="uk.co.tandf.bopp.services.alfrescoRepoUtilsService"/>
-        <property name="nodeService" ref="nodeService"/>
-    </bean>
-
-    <!-- Task T15 delegate bean -->
-    <bean id="t15PublishDartsArticatZIP"
-          parent="baseJavaDelegate"
-          class="uk.co.tandf.bopp.workflow.activiti.T15PublishDartsArticatZIP"
-          depends-on="activitiBeanRegistry">
-        <property name="alfrescoRepoUtilsService" ref="uk.co.tandf.bopp.services.alfrescoRepoUtilsService"/>
-        <property name="dartsService" ref="uk.co.tandf.bopp.services.dartsService"/>
-    </bean>
-
-    <!-- Task T18 delegate bean -->
-    <bean id="t18SaveSelectedChapter"
-          parent="baseJavaDelegate"
-          class="uk.co.tandf.bopp.workflow.activiti.T18SaveSelectedChapter"
-          depends-on="activitiBeanRegistry">
-        <property name="alfrescoRepoUtilsService" ref="uk.co.tandf.bopp.services.alfrescoRepoUtilsService"/>
-        <property name="nodeService" ref="nodeService"/>
-    </bean>
 </beans>

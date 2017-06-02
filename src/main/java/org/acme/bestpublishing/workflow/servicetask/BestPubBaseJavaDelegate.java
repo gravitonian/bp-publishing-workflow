@@ -16,14 +16,14 @@ limitations under the License.
 */
 package org.acme.bestpublishing.workflow.servicetask;
 
+import org.acme.bestpublishing.model.BestPubWorkflowModel;
+import org.acme.bestpublishing.services.AlfrescoRepoUtilsService;
 import org.acme.bestpublishing.services.AlfrescoWorkflowUtilsService;
 import org.acme.bestpublishing.services.BestPubUtilsService;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.alfresco.repo.workflow.activiti.BaseJavaDelegate;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
-
-import static org.acme.bestpublishing.model.BestPubWorkflowModel.VAR_RELATED_ISBN;
 
 /**
  * Base Java Delegate class for Service Task Java Delegate implementations.
@@ -36,12 +36,17 @@ public abstract class BestPubBaseJavaDelegate extends BaseJavaDelegate {
     /**
      * BestPub utility services
      */
+    protected AlfrescoRepoUtilsService alfrescoRepoUtilsService;
     protected AlfrescoWorkflowUtilsService alfrescoWorkflowUtilsService;
     protected BestPubUtilsService bestPubUtilsService;
 
     /**
      * Spring dependency injection
      */
+    public void setAlfrescoRepoUtilsService(AlfrescoRepoUtilsService alfrescoRepoUtilsService) {
+        this.alfrescoRepoUtilsService = alfrescoRepoUtilsService;
+    }
+
     public void setAlfrescoWorkflowUtilsService(AlfrescoWorkflowUtilsService alfrescoWorkflowUtilsService) {
         this.alfrescoWorkflowUtilsService = alfrescoWorkflowUtilsService;
     }
@@ -50,12 +55,20 @@ public abstract class BestPubBaseJavaDelegate extends BaseJavaDelegate {
         this.bestPubUtilsService = bestPubUtilsService;
     }
 
+    /**
+     * Should be implemented by sub-classes
+     * @return the sub-class logger
+     */
     public abstract Logger getLog();
 
     protected void setWorkflowVariable(DelegateExecution exec, String name, Object value, String processInfo) {
         exec.setVariable(name, value);
         getLog().debug("Setting workflow variable [{}={}] {}", new Object[]{name, value, processInfo});
     }
+
+    /**
+     * Helper methods
+     */
 
     /**
      * Compile a string of process information such as workflow instance ID and related ISBN, used for logging
@@ -76,10 +89,12 @@ public abstract class BestPubBaseJavaDelegate extends BaseJavaDelegate {
      * @return the ISBN number, or null if not found
      */
     protected String getISBN(DelegateExecution exec) {
-        String isbn = (String) exec.getVariable(VAR_RELATED_ISBN);
+        String isbn = (String) exec.getVariable(BestPubWorkflowModel.VAR_ISBN);
         if (StringUtils.isBlank(isbn)) {
-            getLog().error("Process variable {} is not set, cannot proceed with service task [definition={}][instance={}]",
-                    new Object[]{VAR_RELATED_ISBN, exec.getProcessDefinitionId(), exec.getProcessInstanceId()});
+            getLog().error(
+                    "Process variable {} is not set, cannot proceed with service task [definition={}][instance={}]",
+                    new Object[]{BestPubWorkflowModel.VAR_ISBN, exec.getProcessDefinitionId(),
+                            exec.getProcessInstanceId()});
             return null;
         }
 
