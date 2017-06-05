@@ -53,6 +53,17 @@
             <parent>bookpubw:basePublishTask</parent>
         </type>
 
+        <!-- T6 -->
+        <type name="bookpubw:contentForISBNCouldNotBeFoundT6Task">
+            <parent>bookpubw:basePublishTask</parent>
+            <properties>
+                <property name="bookpubw:contentLoadingErrorMessage">
+                    <title>Content loading error text</title>
+                    <type>d:text</type>
+                </property>
+            </properties>
+        </type>
+
         <!-- T11 -->
         <type name="bookpubw:correctFailedContentMatchTask">
             <parent>bookpubw:basePublishTask</parent>

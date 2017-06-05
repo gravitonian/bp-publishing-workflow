@@ -124,19 +124,21 @@
         </sequenceFlow>
         <!-- End Lecture T4 -->
 
-        <!-- Lecture T5 -->
+        <!-- Lecture T5 + T6 -->
         <scriptTask id="CheckForContentErrorMsgT5Task" name="T5: Check For Content Error Messages"
                     activiti:class="org.alfresco.repo.workflow.activiti.script.AlfrescoScriptDelegate">
+            <documentation>Due to XPATH standard limitations strings that start with a number need to be escaped, such as for 9 = _x0039_</documentation>
             <extensionElements>
                 <activiti:field name="script">
-                    <activiti:string><![CDATA[var isbn = execution.getVariable('relatedISBN');
+                    <activiti:string><![CDATA[
+                        var isbn = execution.getVariable('bookpub_ISBN');
                         var isbnWithoutStarting9 = isbn.substring(1);
-                        var xmlFiles = search.luceneSearch(
-                            '+PATH:"/app:company_home/app:dictionary/cm:BOPP/cm:Incoming/cm:Content/cm:_x0039_' + isbnWithoutStarting9 +
-                            '/*" +@cm\\:name:"' + isbn + '_*.xml"');
-                        if (xmlFiles.length > 0) {
-                            var xmlFile = xmlFiles[0];
-                            execution.setVariable('contentErrorMessage', xmlFile.content);
+                        var txtFiles = search.luceneSearch(
+                            '+PATH:"/app:company_home/app:dictionary/cm:BestPub/cm:Incoming/cm:Content/cm:_x0039_' + isbnWithoutStarting9 +
+                            '/*" +@cm\\:name:"' + isbn + '_*.txt"');
+                        if (txtFiles.length > 0) {
+                            var txtFile = txtFiles[0];
+                            execution.setVariable('contentErrorMessage', txtFile.content);
                             execution.setVariable('contentErrorFound', true);
                         }]]></activiti:string>
                 </activiti:field>
@@ -153,17 +155,36 @@
                       targetRef="checkForContentWaitTimer">
             <conditionExpression xsi:type="tFormalExpression"><![CDATA[${contentErrorFound == false}]]></conditionExpression>
         </sequenceFlow>
-
-        <!-- Lecture T6 -->
-        <userTask id="contentForISBNCouldNotBeFoundT6Task" name="T6: Content For ISBN could not be found"></userTask>
+        <!-- T6 -->
+        <userTask id="contentForISBNCouldNotBeFoundT6Task" name="T6: Content For ISBN could not be found"
+                  activiti:candidateGroups="GROUP_BESTPUB_COLLABORATORS"
+                  activiti:formKey="bookpubw:contentForISBNCouldNotBeLoadedTask">
+            <extensionElements>
+                <activiti:taskListener event="create" class="org.alfresco.repo.workflow.activiti.tasklistener.ScriptTaskListener">
+                    <activiti:field name="script">
+                        <activiti:string><![CDATA[
+                                var isbn = execution.getVariable('bookpub_ISBN');
+                                task.setVariable('bookpub_ISBN',isbn);
+                                task.description = "Content could not be loaded for " + isbn;
+                                task.setVariable('bookpubw_contentLoadingErrorMessage', execution.getVariable('contentErrorMessage'));]]></activiti:string>
+                    </activiti:field>
+                </activiti:taskListener>
+                <activiti:taskListener event="complete" class="org.alfresco.repo.workflow.activiti.tasklistener.ScriptTaskListener">
+                    <activiti:field name="script">
+                        <activiti:string><![CDATA[execution.setVariable('contentErrorMessage', "");
+                                execution.setVariable('contentErrorFound', false);]]></activiti:string>
+                    </activiti:field>
+                </activiti:taskListener>
+            </extensionElements>
+        </userTask>
         <sequenceFlow id="flow9" sourceRef="contentForISBNCouldNotBeFoundT6Task" targetRef="checkForContentWaitTimer"></sequenceFlow>
-
-        <!-- Lecture WAIT FOR CONTENT -->
+        <!-- Wait for Content Timer -->
         <intermediateCatchEvent id="checkForContentWaitTimer" name="Check For Content Wait Timer">
             <timerEventDefinition></timerEventDefinition>
         </intermediateCatchEvent>
         <sequenceFlow id="flow10" sourceRef="checkForContentWaitTimer"
                       targetRef="checkForContentFromProductionT4Task"></sequenceFlow>
+        <!-- End Lecture T5 + T6 -->
 
         <!-- Lecture T7 + T8 -->
         <serviceTask id="moveContentToChapterFoldersT7Task" name="T7: Move Content To Chapter Folders"
