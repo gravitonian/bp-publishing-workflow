@@ -54,7 +54,7 @@
         </type>
 
         <!-- T6 -->
-        <type name="bookpubw:contentForISBNCouldNotBeFoundT6Task">
+        <type name="bookpubw:contentForISBNCouldNotBeLoadedT6Task">
             <parent>bookpubw:basePublishTask</parent>
             <properties>
                 <property name="bookpubw:contentLoadingErrorMessage">
@@ -64,8 +64,8 @@
             </properties>
         </type>
 
-        <!-- T11 -->
-        <type name="bookpubw:correctFailedContentMatchTask">
+        <!-- T8 -->
+        <type name="bookpubw:correctFailedContentMatchingT8Task">
             <parent>bookpubw:basePublishTask</parent>
             <properties>
                 <!-- The user will have to be guided to the repo hierarchy from within the workflow,
@@ -75,8 +75,7 @@
                     <description>A full nodeRef of the folder containing the chapter folders for an ISBN</description>
                     <type>d:text</type>
                 </property>
-                <!-- We also need a list of mismatched content with chapters, since this is needed across several tasks.
-               	(Created in T10, shown in T11, T12, T13) -->
+                <!-- We also need a list of mismatched chapter content -->
                 <property name="bookpubw:contentChapterMatchingErrorList">
                     <title>Mismatched Content Chapters</title>
                     <description>A list of chapter files whose title did not match the chapter hierarchy in the book-management site</description>

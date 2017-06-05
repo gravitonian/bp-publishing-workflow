@@ -61,7 +61,7 @@
                 			execution.setVariable('bookpub_nrOfChapters', task.getVariable('bookpub_nrOfChapters'));
                 			execution.setVariable('bookpub_nrOfPages', task.getVariable('bookpub_nrOfPages'));
                 			execution.setVariable('bookpubw_publishingDate', task.getVariable('bookpubw_publishingDate'));
-                			execution.setVariable('currentEAUser', person);]]></activiti:string>
+                			execution.setVariable('reviewUser', person);]]></activiti:string>
                     </activiti:field>
                 </activiti:taskListener>
             </extensionElements>
@@ -127,7 +127,10 @@
         <!-- Lecture T5 + T6 -->
         <scriptTask id="CheckForContentErrorMsgT5Task" name="T5: Check For Content Error Messages"
                     activiti:class="org.alfresco.repo.workflow.activiti.script.AlfrescoScriptDelegate">
-            <documentation>Due to XPATH standard limitations strings that start with a number need to be escaped, such as for 9 = _x0039_</documentation>
+            <documentation>
+                Check for Text files with error msg in ISBN folders for incoming content, such as
+                /Company Home/Data Dictionary/BestPub/Incoming/Content/9780486282145/9780486282145-2017-06-05 12:00:00.txt
+                Due to XPATH standard limitations strings that start with a number need to be escaped, such as for 9 = _x0039_</documentation>
             <extensionElements>
                 <activiti:field name="script">
                     <activiti:string><![CDATA[
@@ -148,7 +151,7 @@
                       targetRef="isContentErrorMsgPresentGateway"></sequenceFlow>
         <exclusiveGateway id="isContentErrorMsgPresentGateway" name="Is Content Error Msg Present"></exclusiveGateway>
         <sequenceFlow id="errorMsgFound" name="Error Message Found" sourceRef="isContentErrorMsgPresentGateway"
-                      targetRef="contentForISBNCouldNotBeFoundT6Task">
+                      targetRef="contentForISBNCouldNotBeLoadedT6Task">
             <conditionExpression xsi:type="tFormalExpression"><![CDATA[${contentErrorFound == true}]]></conditionExpression>
         </sequenceFlow>
         <sequenceFlow id="noErrorMsg" name="No Error Message" sourceRef="isContentErrorMsgPresentGateway"
@@ -156,9 +159,9 @@
             <conditionExpression xsi:type="tFormalExpression"><![CDATA[${contentErrorFound == false}]]></conditionExpression>
         </sequenceFlow>
         <!-- T6 -->
-        <userTask id="contentForISBNCouldNotBeFoundT6Task" name="T6: Content For ISBN could not be found"
+        <userTask id="contentForISBNCouldNotBeLoadedT6Task" name="T6: Content For ISBN could not be loaded"
                   activiti:candidateGroups="GROUP_BESTPUB_COLLABORATORS"
-                  activiti:formKey="bookpubw:contentForISBNCouldNotBeLoadedTask">
+                  activiti:formKey="bookpubw:contentForISBNCouldNotBeLoadedT6Task">
             <extensionElements>
                 <activiti:taskListener event="create" class="org.alfresco.repo.workflow.activiti.tasklistener.ScriptTaskListener">
                     <activiti:field name="script">
@@ -177,7 +180,7 @@
                 </activiti:taskListener>
             </extensionElements>
         </userTask>
-        <sequenceFlow id="flow9" sourceRef="contentForISBNCouldNotBeFoundT6Task" targetRef="checkForContentWaitTimer"></sequenceFlow>
+        <sequenceFlow id="flow9" sourceRef="contentForISBNCouldNotBeLoadedT6Task" targetRef="checkForContentWaitTimer"></sequenceFlow>
         <!-- Wait for Content Timer -->
         <intermediateCatchEvent id="checkForContentWaitTimer" name="Check For Content Wait Timer">
             <timerEventDefinition></timerEventDefinition>
@@ -199,7 +202,9 @@
                       sourceRef="isContentMoveCompleteGateway" targetRef="correctFailedContentMatchingT8Task">
             <conditionExpression xsi:type="tFormalExpression"><![CDATA[${contentChapterMatchingOk == false}]]></conditionExpression>
         </sequenceFlow>
-        <userTask id="correctFailedContentMatchingT8Task" name="T8: Correct Failed Content Matching"></userTask>
+        <userTask id="correctFailedContentMatchingT8Task" name="T8: Correct Failed Content Matching"
+                  activiti:assignee="${reviewUser.properties.userName}"
+                  activiti:formKey="bookpubw:correctFailedContentMatchingT8Task"></userTask>
         <sequenceFlow id="contentMatchingFixed" name="Content Matching Fixed"
                       sourceRef="correctFailedContentMatchingT8Task" targetRef="moveContentToChapterFoldersT7Task">
         </sequenceFlow>
@@ -252,7 +257,7 @@
             <bpmndi:BPMNShape bpmnElement="CheckForContentErrorMsgT5Task" id="BPMNShape_CheckForContentErrorMsgT5Task">
                 <omgdc:Bounds height="61.0" width="105.0" x="57.0" y="270.0"></omgdc:Bounds>
             </bpmndi:BPMNShape>
-            <bpmndi:BPMNShape bpmnElement="contentForISBNCouldNotBeFoundT6Task" id="BPMNShape_contentForISBNCouldNotBeFoundT6Task">
+            <bpmndi:BPMNShape bpmnElement="contentForISBNCouldNotBeLoadedT6Task" id="BPMNShape_contentForISBNCouldNotBeLoadedT6Task">
                 <omgdc:Bounds height="61.0" width="105.0" x="57.0" y="100.0"></omgdc:Bounds>
             </bpmndi:BPMNShape>
             <bpmndi:BPMNShape bpmnElement="isContentErrorMsgPresentGateway" id="BPMNShape_isContentErrorMsgPresentGateway">
