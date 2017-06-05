@@ -49,8 +49,30 @@
         </type>
 
         <!-- T1 -->
-        <type name="boppw:reviewBookInfoT1Task">
+        <type name="bookpubw:reviewBookInfoT1Task">
             <parent>bookpubw:basePublishTask</parent>
+        </type>
+
+        <!-- T11 -->
+        <type name="bookpubw:correctFailedContentMatchTask">
+            <parent>bookpubw:basePublishTask</parent>
+            <properties>
+                <!-- The user will have to be guided to the repo hierarchy from within the workflow,
+                	 so let's store the nodeRef of the created folder hierarchy -->
+                <property name="bookpubw:isbnFolderNodeRef">
+                    <title>The NodeRef of the ISBN folder</title>
+                    <description>A full nodeRef of the folder containing the chapter folders for an ISBN</description>
+                    <type>d:text</type>
+                </property>
+                <!-- We also need a list of mismatched content with chapters, since this is needed across several tasks.
+               	(Created in T10, shown in T11, T12, T13) -->
+                <property name="bookpubw:contentChapterMatchingErrorList">
+                    <title>Mismatched Content Chapters</title>
+                    <description>A list of chapter files whose title did not match the chapter hierarchy in the book-management site</description>
+                    <type>d:text</type>
+                    <multiple>true</multiple>
+                </property>
+            </properties>
         </type>
     </types>
 </model>

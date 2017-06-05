@@ -32,4 +32,15 @@
           class="org.acme.bestpublishing.workflow.servicetask.T3SetupChapterListJavaDelegate">
     </bean>
 
+    <!-- Task T4 delegate bean -->
+    <bean id="org.acme.bestpublishing.workflow.servicetask.t4CheckForContentDelegate"
+          parent="org.acme.bestpublishing.workflow.servicetask.baseJavaDelegate"
+          class="org.acme.bestpublishing.workflow.servicetask.T4CheckForContentDelegate">
+    </bean>
+
+    <!-- Task T7 delegate bean -->
+    <bean id="org.acme.bestpublishing.workflow.servicetask.t7MoveContentToChapterFoldersDelegate"
+          parent="org.acme.bestpublishing.workflow.servicetask.baseJavaDelegate"
+          class="org.acme.bestpublishing.workflow.servicetask.T7MoveContentToChapterFoldersDelegate">
+    </bean>
 </beans>

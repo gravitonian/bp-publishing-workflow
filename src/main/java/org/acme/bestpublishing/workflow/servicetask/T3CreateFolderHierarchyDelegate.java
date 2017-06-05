@@ -17,6 +17,7 @@ limitations under the License.
 package org.acme.bestpublishing.workflow.servicetask;
 
 import org.activiti.engine.delegate.DelegateExecution;
+import org.alfresco.service.cmr.repository.NodeRef;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,10 +64,13 @@ public class T3CreateFolderHierarchyDelegate extends BestPubBaseJavaDelegate {
         List<Properties> chapterList = (List<Properties>) exec.getVariable(VAR_CHAPTER_LIST);
 
         // Create the new folder hierarchy for the ISBN
-        boolean foldersCreated = bestPubUtilsService.createChapterFolder(isbn, bookInfo, chapterList, processInfo);
+        NodeRef isbnFolderNodeRef = bestPubUtilsService.createChapterFolders(isbn, bookInfo, chapterList, processInfo);
+
+        // Store away the ISBN Folder node ref so it can be easily used in Task Forms
+        setWorkflowVariable(exec, VAR_ISBN_FOLDER_NODEREF, isbnFolderNodeRef.toString(), processInfo);
 
         // Tell the workflow that there is now a folder hierarchy where content can be uploaded
-        setWorkflowVariable(exec, VAR_CHAPTER_FOLDER_HIERARCHY_EXISTS, foldersCreated, processInfo);
+        setWorkflowVariable(exec, VAR_CHAPTER_FOLDER_HIERARCHY_EXISTS, true, processInfo);
 
         LOG.debug("Finished T3 - Creating chapter folder hierarchy {}", processInfo);
     }

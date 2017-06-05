@@ -18,7 +18,7 @@
         <sequenceFlow id="processContent" name="Process Content " sourceRef="forkProcessingOfContentAndMetadata"
                       targetRef="checkForContentFromProductionT4Task"></sequenceFlow>
 
-        <!-- Metadata processing route -->
+        <!--======================================== Metadata processing route ======================================-->
 
         <!-- Lecture T1 -->
         <userTask id="reviewBookInfoT1Task" name="T1: Review Book Info"
@@ -30,7 +30,7 @@
                         <activiti:string><![CDATA[
                         var isEscalated = execution.getVariable('T1Escalated');
                         var isbn = execution.getVariable('bookpub_ISBN');
-                        var taskDescription = "Verify Book Metadata for " + isbn;
+                        var taskDescription = "Review Book Info for " + isbn;
                         if (typeof isEscalated != 'undefined' && isEscalated == true) {
                             taskDescription = "ESCALATED: " + taskDescription;
                         }
@@ -98,49 +98,100 @@
         <sequenceFlow id="flow6" sourceRef="createFolderHierarchyWithMetadataT3Task" targetRef="joinContentAndMetadata"></sequenceFlow>
         <!-- END Lecture T3 -->
 
-        <!-- Content processing route -->
-        <serviceTask id="checkForContentFromProductionT4Task" name="T4: Check for Content From Production"></serviceTask>
+        <!--======================================== Content processing route =======================================-->
+
+        <!-- Lecture T4 -->
+        <serviceTask id="checkForContentFromProductionT4Task" name="T4: Check for Content From Production"
+                     activiti:delegateExpression="${org.acme.bestpublishing.workflow.servicetask.t4CheckForContentDelegate}"></serviceTask>
         <sequenceFlow id="flow7" sourceRef="checkForContentFromProductionT4Task" targetRef="isContentFoundGateway"></sequenceFlow>
         <exclusiveGateway id="isContentFoundGateway" name="Is Content Found "></exclusiveGateway>
         <sequenceFlow id="contentWasFound" name="Content Was Found" sourceRef="isContentFoundGateway"
-                      targetRef="isFolderHierarchyPresentGateway"></sequenceFlow>
+                      targetRef="isFolderHierarchyPresentGateway">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${contentFound == true}]]></conditionExpression>
+        </sequenceFlow>
         <sequenceFlow id="contentWasNotFound" name="Content Was Not Found" sourceRef="isContentFoundGateway"
-                      targetRef="CheckForContentErrorMsgT6Task"></sequenceFlow>
+                      targetRef="CheckForContentErrorMsgT5Task">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${contentFound == false}]]></conditionExpression>
+        </sequenceFlow>
         <exclusiveGateway id="isFolderHierarchyPresentGateway" name="Is Folder Hierarchy Present"></exclusiveGateway>
         <sequenceFlow id="folderHierarchyExists" name="Folder Hierarchy Exists"
-                      sourceRef="isFolderHierarchyPresentGateway"
-                      targetRef="moveContentToChapterFoldersT5Task"></sequenceFlow>
+                      sourceRef="isFolderHierarchyPresentGateway" targetRef="moveContentToChapterFoldersT7Task">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${chapterFolderHierarchyExists == true}]]></conditionExpression>
+        </sequenceFlow>
         <sequenceFlow id="folderHierarchyMissing" name="Folder Hierarchy Missing"
-                      sourceRef="isFolderHierarchyPresentGateway" targetRef="checkForContentWaitTimer"></sequenceFlow>
-        <serviceTask id="moveContentToChapterFoldersT5Task" name="T5: Move Content To Chapter Folders"></serviceTask>
-        <sequenceFlow id="flow11" sourceRef="moveContentToChapterFoldersT5Task"
-                      targetRef="joinContentAndMetadata"></sequenceFlow>
-        <scriptTask id="CheckForContentErrorMsgT6Task" name="T6: Check For Content Error Messages"
-                    activiti:autoStoreVariables="false"></scriptTask>
-        <sequenceFlow id="flow8" sourceRef="CheckForContentErrorMsgT6Task"
+                      sourceRef="isFolderHierarchyPresentGateway" targetRef="checkForContentWaitTimer">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${chapterFolderHierarchyExists == false}]]></conditionExpression>
+        </sequenceFlow>
+        <!-- End Lecture T4 -->
+
+        <!-- Lecture T5 -->
+        <scriptTask id="CheckForContentErrorMsgT5Task" name="T5: Check For Content Error Messages"
+                    activiti:class="org.alfresco.repo.workflow.activiti.script.AlfrescoScriptDelegate">
+            <extensionElements>
+                <activiti:field name="script">
+                    <activiti:string><![CDATA[var isbn = execution.getVariable('relatedISBN');
+                        var isbnWithoutStarting9 = isbn.substring(1);
+                        var xmlFiles = search.luceneSearch(
+                            '+PATH:"/app:company_home/app:dictionary/cm:BOPP/cm:Incoming/cm:Content/cm:_x0039_' + isbnWithoutStarting9 +
+                            '/*" +@cm\\:name:"' + isbn + '_*.xml"');
+                        if (xmlFiles.length > 0) {
+                            var xmlFile = xmlFiles[0];
+                            execution.setVariable('contentErrorMessage', xmlFile.content);
+                            execution.setVariable('contentErrorFound', true);
+                        }]]></activiti:string>
+                </activiti:field>
+            </extensionElements>
+        </scriptTask>
+        <sequenceFlow id="flow8" sourceRef="CheckForContentErrorMsgT5Task"
                       targetRef="isContentErrorMsgPresentGateway"></sequenceFlow>
         <exclusiveGateway id="isContentErrorMsgPresentGateway" name="Is Content Error Msg Present"></exclusiveGateway>
         <sequenceFlow id="errorMsgFound" name="Error Message Found" sourceRef="isContentErrorMsgPresentGateway"
-                      targetRef="contentForISBNCouldNotBeFoundT7Task"></sequenceFlow>
+                      targetRef="contentForISBNCouldNotBeFoundT6Task">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${contentErrorFound == true}]]></conditionExpression>
+        </sequenceFlow>
         <sequenceFlow id="noErrorMsg" name="No Error Message" sourceRef="isContentErrorMsgPresentGateway"
-                      targetRef="checkForContentWaitTimer"></sequenceFlow>
-        <userTask id="contentForISBNCouldNotBeFoundT7Task" name="T7: Content For ISBN could not be found"></userTask>
-        <sequenceFlow id="flow9" sourceRef="contentForISBNCouldNotBeFoundT7Task" targetRef="checkForContentWaitTimer"></sequenceFlow>
+                      targetRef="checkForContentWaitTimer">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${contentErrorFound == false}]]></conditionExpression>
+        </sequenceFlow>
+
+        <!-- Lecture T6 -->
+        <userTask id="contentForISBNCouldNotBeFoundT6Task" name="T6: Content For ISBN could not be found"></userTask>
+        <sequenceFlow id="flow9" sourceRef="contentForISBNCouldNotBeFoundT6Task" targetRef="checkForContentWaitTimer"></sequenceFlow>
+
+        <!-- Lecture WAIT FOR CONTENT -->
         <intermediateCatchEvent id="checkForContentWaitTimer" name="Check For Content Wait Timer">
             <timerEventDefinition></timerEventDefinition>
         </intermediateCatchEvent>
         <sequenceFlow id="flow10" sourceRef="checkForContentWaitTimer"
                       targetRef="checkForContentFromProductionT4Task"></sequenceFlow>
 
+        <!-- Lecture T7 + T8 -->
+        <serviceTask id="moveContentToChapterFoldersT7Task" name="T7: Move Content To Chapter Folders"
+                     activiti:delegateExpression="${org.acme.bestpublishing.workflow.servicetask.t7MoveContentToChapterFoldersDelegate}"></serviceTask>
+        <sequenceFlow id="flow15" sourceRef="moveContentToChapterFoldersT7Task" targetRef="isContentMoveCompleteGateway"></sequenceFlow>
+        <exclusiveGateway id="isContentMoveCompleteGateway" name="Is Content Move Complete Gateway"></exclusiveGateway>
+        <sequenceFlow id="contentMoveComplete" name="Content Complete"
+                      sourceRef="isContentMoveCompleteGateway" targetRef="joinContentAndMetadata">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${contentChapterMatchingOk == true}]]></conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow id="contentMatchingFailed" name="Content Matching Failed"
+                      sourceRef="isContentMoveCompleteGateway" targetRef="correctFailedContentMatchingT8Task">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${contentChapterMatchingOk == false}]]></conditionExpression>
+        </sequenceFlow>
+        <userTask id="correctFailedContentMatchingT8Task" name="T8: Correct Failed Content Matching"></userTask>
+        <sequenceFlow id="contentMatchingFixed" name="Content Matching Fixed"
+                      sourceRef="correctFailedContentMatchingT8Task" targetRef="moveContentToChapterFoldersT7Task">
+        </sequenceFlow>
+        <!-- End of Lecture T7 + T8 -->
+
         <!-- Join together Metadata and Content Processing -->
         <parallelGateway id="joinContentAndMetadata" name="Join Content and Metadata"></parallelGateway>
         <sequenceFlow id="flow13" sourceRef="joinContentAndMetadata"
-                      targetRef="applyMetadataToAllContentFilesT8Task"></sequenceFlow>
+                      targetRef="applyMetadataToAllContentFilesT9Task"></sequenceFlow>
 
         <!-- Apply metadata to all book content -->
-        <serviceTask id="applyMetadataToAllContentFilesT8Task"
-                     name="T8: Apply Metadata to All Content Files"></serviceTask>
-        <sequenceFlow id="flow14" sourceRef="applyMetadataToAllContentFilesT8Task" targetRef="endevent1"></sequenceFlow>
+        <serviceTask id="applyMetadataToAllContentFilesT9Task" name="T9: Apply Metadata to All Content Files"></serviceTask>
+        <sequenceFlow id="flow14" sourceRef="applyMetadataToAllContentFilesT9Task" targetRef="endevent1"></sequenceFlow>
 
         <endEvent id="endevent1" name="End"></endEvent>
     </process>
@@ -148,9 +199,9 @@
     <bpmndi:BPMNDiagram id="BPMNDiagram_myProcess">
         <bpmndi:BPMNPlane bpmnElement="myProcess" id="BPMNPlane_myProcess">
             <bpmndi:BPMNShape bpmnElement="endevent1" id="BPMNShape_endevent1">
-                <omgdc:Bounds height="35.0" width="35.0" x="480.0" y="630.0"></omgdc:Bounds>
+                <omgdc:Bounds height="35.0" width="35.0" x="480.0" y="700.0"></omgdc:Bounds>
             </bpmndi:BPMNShape>
-            <bpmndi:BPMNShape bpmnElement="forkProcessingOfContentAndMetadata" id="BPMNShape_forkProcessingOfContentAndMetadata">
+            <bpmndi:BPMNShape bpmnElement="forProcessingOfContentAndMetadata" id="BPMNShape_forProcessingOfContentAndMetadata">
                 <omgdc:Bounds height="40.0" width="40.0" x="477.0" y="110.0"></omgdc:Bounds>
             </bpmndi:BPMNShape>
             <bpmndi:BPMNShape bpmnElement="alfrescoStartevent1" id="BPMNShape_alfrescoStartevent1">
@@ -177,10 +228,10 @@
             <bpmndi:BPMNShape bpmnElement="isFolderHierarchyPresentGateway" id="BPMNShape_isFolderHierarchyPresentGateway">
                 <omgdc:Bounds height="40.0" width="40.0" x="322.0" y="360.0"></omgdc:Bounds>
             </bpmndi:BPMNShape>
-            <bpmndi:BPMNShape bpmnElement="CheckForContentErrorMsgT6Task" id="BPMNShape_CheckForContentErrorMsgT6Task">
+            <bpmndi:BPMNShape bpmnElement="CheckForContentErrorMsgT5Task" id="BPMNShape_CheckForContentErrorMsgT5Task">
                 <omgdc:Bounds height="61.0" width="105.0" x="57.0" y="270.0"></omgdc:Bounds>
             </bpmndi:BPMNShape>
-            <bpmndi:BPMNShape bpmnElement="contentForISBNCouldNotBeFoundT7Task" id="BPMNShape_contentForISBNCouldNotBeFoundT7Task">
+            <bpmndi:BPMNShape bpmnElement="contentForISBNCouldNotBeFoundT6Task" id="BPMNShape_contentForISBNCouldNotBeFoundT6Task">
                 <omgdc:Bounds height="61.0" width="105.0" x="57.0" y="100.0"></omgdc:Bounds>
             </bpmndi:BPMNShape>
             <bpmndi:BPMNShape bpmnElement="isContentErrorMsgPresentGateway" id="BPMNShape_isContentErrorMsgPresentGateway">
@@ -189,14 +240,20 @@
             <bpmndi:BPMNShape bpmnElement="checkForContentWaitTimer" id="BPMNShape_checkForContentWaitTimer">
                 <omgdc:Bounds height="35.0" width="35.0" x="255.0" y="113.0"></omgdc:Bounds>
             </bpmndi:BPMNShape>
-            <bpmndi:BPMNShape bpmnElement="moveContentToChapterFoldersT5Task" id="BPMNShape_moveContentToChapterFoldersT5Task">
-                <omgdc:Bounds height="61.0" width="105.0" x="290.0" y="440.0"></omgdc:Bounds>
+            <bpmndi:BPMNShape bpmnElement="moveContentToChapterFoldersT7Task" id="BPMNShape_moveContentToChapterFoldersT7Task">
+                <omgdc:Bounds height="61.0" width="105.0" x="140.0" y="440.0"></omgdc:Bounds>
             </bpmndi:BPMNShape>
             <bpmndi:BPMNShape bpmnElement="joinContentAndMetadata" id="BPMNShape_joinContentAndMetadata">
-                <omgdc:Bounds height="40.0" width="40.0" x="477.0" y="490.0"></omgdc:Bounds>
+                <omgdc:Bounds height="40.0" width="40.0" x="477.0" y="517.0"></omgdc:Bounds>
             </bpmndi:BPMNShape>
-            <bpmndi:BPMNShape bpmnElement="applyMetadataToAllContentFilesT8Task" id="BPMNShape_applyMetadataToAllContentFilesT8Task">
-                <omgdc:Bounds height="61.0" width="105.0" x="445.0" y="550.0"></omgdc:Bounds>
+            <bpmndi:BPMNShape bpmnElement="applyMetadataToAllContentFilesT9Task" id="BPMNShape_applyMetadataToAllContentFilesT9Task">
+                <omgdc:Bounds height="61.0" width="105.0" x="445.0" y="610.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="isContentMoveCompleteGateway" id="BPMNShape_isContentMoveCompleteGateway">
+                <omgdc:Bounds height="40.0" width="40.0" x="322.0" y="450.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="correctFailedContentMatchingT8Task" id="BPMNShape_correctFailedContentMatchingT8Task">
+                <omgdc:Bounds height="68.0" width="105.0" x="290.0" y="527.0"></omgdc:Bounds>
             </bpmndi:BPMNShape>
             <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
                 <omgdi:waypoint x="497.0" y="55.0"></omgdi:waypoint>
@@ -235,11 +292,14 @@
                 <omgdi:waypoint x="682.0" y="321.0"></omgdi:waypoint>
                 <omgdi:waypoint x="682.0" y="350.0"></omgdi:waypoint>
             </bpmndi:BPMNEdge>
-            <bpmndi:BPMNEdge bpmnElement="flow6" id="BPMNEdge_flow6">
+            <bpmndi:BPMNEdge bpmnElement="metadataComplete" id="BPMNEdge_metadataComplete">
                 <omgdi:waypoint x="682.0" y="421.0"></omgdi:waypoint>
                 <omgdi:waypoint x="682.0" y="471.0"></omgdi:waypoint>
                 <omgdi:waypoint x="497.0" y="471.0"></omgdi:waypoint>
-                <omgdi:waypoint x="497.0" y="490.0"></omgdi:waypoint>
+                <omgdi:waypoint x="497.0" y="517.0"></omgdi:waypoint>
+                <bpmndi:BPMNLabel>
+                    <omgdc:Bounds height="13.0" width="100.0" x="550.0" y="451.0"></omgdc:Bounds>
+                </bpmndi:BPMNLabel>
             </bpmndi:BPMNEdge>
             <bpmndi:BPMNEdge bpmnElement="flow7" id="BPMNEdge_flow7">
                 <omgdi:waypoint x="342.0" y="251.0"></omgdi:waypoint>
@@ -279,9 +339,9 @@
             </bpmndi:BPMNEdge>
             <bpmndi:BPMNEdge bpmnElement="folderHierarchyExists" id="BPMNEdge_folderHierarchyExists">
                 <omgdi:waypoint x="342.0" y="400.0"></omgdi:waypoint>
-                <omgdi:waypoint x="342.0" y="440.0"></omgdi:waypoint>
+                <omgdi:waypoint x="192.0" y="440.0"></omgdi:waypoint>
                 <bpmndi:BPMNLabel>
-                    <omgdc:Bounds height="39.0" width="100.0" x="350.0" y="399.0"></omgdc:Bounds>
+                    <omgdc:Bounds height="39.0" width="100.0" x="314.0" y="420.0"></omgdc:Bounds>
                 </bpmndi:BPMNLabel>
             </bpmndi:BPMNEdge>
             <bpmndi:BPMNEdge bpmnElement="flow9" id="BPMNEdge_flow9">
@@ -301,18 +361,40 @@
                 <omgdi:waypoint x="342.0" y="132.0"></omgdi:waypoint>
                 <omgdi:waypoint x="342.0" y="190.0"></omgdi:waypoint>
             </bpmndi:BPMNEdge>
-            <bpmndi:BPMNEdge bpmnElement="flow11" id="BPMNEdge_flow11">
-                <omgdi:waypoint x="395.0" y="470.0"></omgdi:waypoint>
-                <omgdi:waypoint x="497.0" y="470.0"></omgdi:waypoint>
-                <omgdi:waypoint x="497.0" y="490.0"></omgdi:waypoint>
-            </bpmndi:BPMNEdge>
             <bpmndi:BPMNEdge bpmnElement="flow13" id="BPMNEdge_flow13">
-                <omgdi:waypoint x="497.0" y="530.0"></omgdi:waypoint>
-                <omgdi:waypoint x="497.0" y="550.0"></omgdi:waypoint>
+                <omgdi:waypoint x="497.0" y="557.0"></omgdi:waypoint>
+                <omgdi:waypoint x="497.0" y="610.0"></omgdi:waypoint>
             </bpmndi:BPMNEdge>
             <bpmndi:BPMNEdge bpmnElement="flow14" id="BPMNEdge_flow14">
-                <omgdi:waypoint x="497.0" y="611.0"></omgdi:waypoint>
-                <omgdi:waypoint x="497.0" y="630.0"></omgdi:waypoint>
+                <omgdi:waypoint x="497.0" y="671.0"></omgdi:waypoint>
+                <omgdi:waypoint x="497.0" y="700.0"></omgdi:waypoint>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow15" id="BPMNEdge_flow15">
+                <omgdi:waypoint x="245.0" y="470.0"></omgdi:waypoint>
+                <omgdi:waypoint x="322.0" y="470.0"></omgdi:waypoint>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="contentMatchingFailed" id="BPMNEdge_contentMatchingFailed">
+                <omgdi:waypoint x="342.0" y="490.0"></omgdi:waypoint>
+                <omgdi:waypoint x="342.0" y="527.0"></omgdi:waypoint>
+                <bpmndi:BPMNLabel>
+                    <omgdc:Bounds height="39.0" width="100.0" x="350.0" y="489.0"></omgdc:Bounds>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="contentMatchingFixed" id="BPMNEdge_contentMatchingFixed">
+                <omgdi:waypoint x="290.0" y="561.0"></omgdi:waypoint>
+                <omgdi:waypoint x="192.0" y="560.0"></omgdi:waypoint>
+                <omgdi:waypoint x="192.0" y="501.0"></omgdi:waypoint>
+                <bpmndi:BPMNLabel>
+                    <omgdc:Bounds height="39.0" width="100.0" x="198.0" y="529.0"></omgdc:Bounds>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="contentMoveComplete" id="BPMNEdge_contentMoveComplete">
+                <omgdi:waypoint x="362.0" y="470.0"></omgdi:waypoint>
+                <omgdi:waypoint x="496.0" y="470.0"></omgdi:waypoint>
+                <omgdi:waypoint x="682.0" y="421.0"></omgdi:waypoint>
+                <bpmndi:BPMNLabel>
+                    <omgdc:Bounds height="13.0" width="100.0" x="380.0" y="458.0"></omgdc:Bounds>
+                </bpmndi:BPMNLabel>
             </bpmndi:BPMNEdge>
         </bpmndi:BPMNPlane>
     </bpmndi:BPMNDiagram>
