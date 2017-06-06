@@ -127,7 +127,7 @@
         <!-- End Lecture T4 -->
 
         <!-- Lecture T5 + T6 -->
-        <scriptTask id="CheckForContentErrorMsgT5Task" name="T5: Check For Content Error Messages"
+        <serviceTask id="CheckForContentErrorMsgT5Task" name="T5: Check For Content Error Messages"
                     activiti:class="org.alfresco.repo.workflow.activiti.script.AlfrescoScriptDelegate">
             <documentation>
                 Check for Text files with error msg in ISBN folders for incoming content, such as
@@ -148,7 +148,8 @@
                         }]]></activiti:string>
                 </activiti:field>
             </extensionElements>
-        </scriptTask>
+        </serviceTask>
+
         <sequenceFlow id="flow8" sourceRef="CheckForContentErrorMsgT5Task"
                       targetRef="isContentErrorMsgPresentGateway"></sequenceFlow>
         <exclusiveGateway id="isContentErrorMsgPresentGateway" name="Is Content Error Msg Present"></exclusiveGateway>
