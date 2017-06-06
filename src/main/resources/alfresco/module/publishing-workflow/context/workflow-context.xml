@@ -27,9 +27,9 @@
     </bean>
 
     <!-- Task T3 delegate bean -->
-    <bean id="org.acme.bestpublishing.workflow.servicetask.t3SetupChapterListJavaDelegate"
+    <bean id="org.acme.bestpublishing.workflow.servicetask.t3CreateFolderHierarchyDelegate"
           parent="org.acme.bestpublishing.workflow.servicetask.baseJavaDelegate"
-          class="org.acme.bestpublishing.workflow.servicetask.T3SetupChapterListJavaDelegate">
+          class="org.acme.bestpublishing.workflow.servicetask.T3CreateFolderHierarchyDelegate">
     </bean>
 
     <!-- Task T4 delegate bean -->

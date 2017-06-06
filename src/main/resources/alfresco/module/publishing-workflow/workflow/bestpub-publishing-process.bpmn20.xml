@@ -94,7 +94,7 @@
 
         <!-- Lecture T3 -->
         <serviceTask id="createFolderHierarchyWithMetadataT3Task" name="T3: Create Folder Hierarchy with Metadata"
-                     activiti:delegateExpression="${org.acme.bestpublishing.workflow.servicetask.t3SetupChapterListJavaDelegate}"></serviceTask>
+                     activiti:delegateExpression="${org.acme.bestpublishing.workflow.servicetask.t3CreateFolderHierarchyDelegate}"></serviceTask>
         <sequenceFlow id="flow6" sourceRef="createFolderHierarchyWithMetadataT3Task" targetRef="joinContentAndMetadata"></sequenceFlow>
         <!-- END Lecture T3 -->
 
