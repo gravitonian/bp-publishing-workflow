@@ -68,7 +68,9 @@
         </userTask>
         <boundaryEvent id="escalateReviewBookInfoTimer" name="Escalate Review Book Info Timer"
                        attachedToRef="reviewBookInfoT1Task" cancelActivity="true">
-            <timerEventDefinition>${InterruptT1TimerDuration}</timerEventDefinition>
+            <timerEventDefinition>
+                <timeDuration>${InterruptT1TimerDuration}</timeDuration>
+            </timerEventDefinition>
         </boundaryEvent>
         <sequenceFlow id="escalateReviewBookInfo" name="Escalate Review Book Info"
                       sourceRef="escalateReviewBookInfoTimer"
@@ -183,7 +185,9 @@
         <sequenceFlow id="flow9" sourceRef="contentForISBNCouldNotBeLoadedT6Task" targetRef="checkForContentWaitTimer"></sequenceFlow>
         <!-- Wait for Content Timer -->
         <intermediateCatchEvent id="checkForContentWaitTimer" name="Check For Content Wait Timer">
-            <timerEventDefinition></timerEventDefinition>
+            <timerEventDefinition>
+                <timeDuration>${Wait2Check4ContentTimerDuration}</timeDuration>
+            </timerEventDefinition>
         </intermediateCatchEvent>
         <sequenceFlow id="flow10" sourceRef="checkForContentWaitTimer"
                       targetRef="checkForContentFromProductionT4Task"></sequenceFlow>
