@@ -62,7 +62,7 @@ public class T7MoveContentToChapterFoldersDelegate extends BestPubBaseJavaDelega
 
 		String processInfo = getProcInfo(exec, isbn);
 
-		LOG.debug("T10 - Move content to chapter folders {}", processInfo);
+		LOG.debug("T7 - Move content to chapter folders {}", processInfo);
 
 		// Setup content matching as failed until we know every piece of content has been moved properly
 		boolean contentChapterMatchingOk = false;
@@ -211,7 +211,7 @@ public class T7MoveContentToChapterFoldersDelegate extends BestPubBaseJavaDelega
 
 		setWorkflowVariable(exec, VAR_CONTENT_CHAPTER_MATCHING_OK, contentChapterMatchingOk, processInfo);
 
-		LOG.debug("Finished T5 - Move content to chapter folders {}", processInfo);
+		LOG.debug("Finished T7 - Move content to chapter folders {}", processInfo);
 	}
 
 }

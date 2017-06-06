@@ -43,4 +43,10 @@
           parent="org.acme.bestpublishing.workflow.servicetask.baseJavaDelegate"
           class="org.acme.bestpublishing.workflow.servicetask.T7MoveContentToChapterFoldersDelegate">
     </bean>
+
+    <!-- Task T9 delegate bean -->
+    <bean id="org.acme.bestpublishing.workflow.servicetask.t9ApplyMetadataToChapterFiles"
+          parent="org.acme.bestpublishing.workflow.servicetask.baseJavaDelegate"
+          class="org.acme.bestpublishing.workflow.servicetask.T9ApplyMetadataToChapterFiles">
+    </bean>
 </beans>

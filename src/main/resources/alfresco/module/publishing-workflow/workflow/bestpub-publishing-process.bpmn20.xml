@@ -216,8 +216,11 @@
                       targetRef="applyMetadataToAllContentFilesT9Task"></sequenceFlow>
 
         <!-- Apply metadata to all book content -->
-        <serviceTask id="applyMetadataToAllContentFilesT9Task" name="T9: Apply Metadata to All Content Files"></serviceTask>
+        <!-- Lecture T9 -->
+        <serviceTask id="applyMetadataToAllContentFilesT9Task" name="T9: Apply Metadata to All Content Files"
+                     activiti:delegateExpression="${org.acme.bestpublishing.workflow.servicetask.t9ApplyMetadataToChapterFiles}"></serviceTask>
         <sequenceFlow id="flow14" sourceRef="applyMetadataToAllContentFilesT9Task" targetRef="endevent1"></sequenceFlow>
+        <!-- End of Lecture T9 -->
 
         <endEvent id="endevent1" name="End"></endEvent>
     </process>
