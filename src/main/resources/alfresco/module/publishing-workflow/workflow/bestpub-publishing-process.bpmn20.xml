@@ -89,14 +89,14 @@
 
         <!-- Lecture T2 -->
         <serviceTask id="setupChapterListT2Task" name="T2: Set up chapter list based on Metadata ZIP"
-                     activiti:delegateExpression="${org.acme.bestpublishing.workflow.servicetask.t2SetupChapterListJavaDelegate}"></serviceTask>
+                     activiti:delegateExpression="${t2SetupChapterListJavaDelegate}"></serviceTask>
         <sequenceFlow id="flow5" sourceRef="setupChapterListT2Task"
                       targetRef="createFolderHierarchyWithMetadataT3Task"></sequenceFlow>
         <!-- END Lecture T2 -->
 
         <!-- Lecture T3 -->
         <serviceTask id="createFolderHierarchyWithMetadataT3Task" name="T3: Create Folder Hierarchy with Metadata"
-                     activiti:delegateExpression="${org.acme.bestpublishing.workflow.servicetask.t3CreateFolderHierarchyDelegate}"></serviceTask>
+                     activiti:delegateExpression="${t3CreateFolderHierarchyDelegate}"></serviceTask>
         <sequenceFlow id="flow6" sourceRef="createFolderHierarchyWithMetadataT3Task" targetRef="joinContentAndMetadata"></sequenceFlow>
         <!-- END Lecture T3 -->
 
@@ -104,7 +104,7 @@
 
         <!-- Lecture T4 -->
         <serviceTask id="checkForContentFromProductionT4Task" name="T4: Check for Content From Production"
-                     activiti:delegateExpression="${org.acme.bestpublishing.workflow.servicetask.t4CheckForContentDelegate}"></serviceTask>
+                     activiti:delegateExpression="${t4CheckForContentDelegate}"></serviceTask>
         <sequenceFlow id="flow7" sourceRef="checkForContentFromProductionT4Task" targetRef="isContentFoundGateway"></sequenceFlow>
         <exclusiveGateway id="isContentFoundGateway" name="Is Content Found "></exclusiveGateway>
         <sequenceFlow id="contentWasFound" name="Content Was Found" sourceRef="isContentFoundGateway"
@@ -196,7 +196,7 @@
 
         <!-- Lecture T7 + T8 -->
         <serviceTask id="moveContentToChapterFoldersT7Task" name="T7: Move Content To Chapter Folders"
-                     activiti:delegateExpression="${org.acme.bestpublishing.workflow.servicetask.t7MoveContentToChapterFoldersDelegate}"></serviceTask>
+                     activiti:delegateExpression="${t7MoveContentToChapterFoldersDelegate}"></serviceTask>
         <sequenceFlow id="flow15" sourceRef="moveContentToChapterFoldersT7Task" targetRef="isContentMoveCompleteGateway"></sequenceFlow>
         <exclusiveGateway id="isContentMoveCompleteGateway" name="Is Content Move Complete Gateway"></exclusiveGateway>
         <sequenceFlow id="contentMoveComplete" name="Content Complete"
@@ -223,7 +223,7 @@
         <!-- Apply metadata to all book content -->
         <!-- Lecture T9 -->
         <serviceTask id="applyMetadataToAllContentFilesT9Task" name="T9: Apply Metadata to All Content Files"
-                     activiti:delegateExpression="${org.acme.bestpublishing.workflow.servicetask.t9ApplyMetadataToChapterFiles}"></serviceTask>
+                     activiti:delegateExpression="${t9ApplyMetadataToChapterFiles}"></serviceTask>
         <sequenceFlow id="flow14" sourceRef="applyMetadataToAllContentFilesT9Task" targetRef="endevent1"></sequenceFlow>
         <!-- End of Lecture T9 -->
 

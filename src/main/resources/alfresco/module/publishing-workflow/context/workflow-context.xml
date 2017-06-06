@@ -20,32 +20,37 @@
         <property name="bestPubUtilsService" ref="org.acme.bestpublishing.services.bestPubUtilsService" />
     </bean>
 
+    <!-- Delegate bean IDs cannot contain package path, such as
+            org.acme.bestpublishing.workflow.servicetask.t2SetupChapterListJavaDelegate,
+             The ID need to be one word to be used in a activiti:delegateExpression, such as t2SetupChapterListJavaDelegate.
+              The Expression Language (EL) allows to use simple expressions to dynamically access data from
+              JavaBeans components. Hence org. would not resolve -->
     <!-- Task T2 delegate bean -->
-    <bean id="org.acme.bestpublishing.workflow.servicetask.t2SetupChapterListJavaDelegate"
+    <bean id="t2SetupChapterListJavaDelegate"
           parent="org.acme.bestpublishing.workflow.servicetask.baseJavaDelegate"
           class="org.acme.bestpublishing.workflow.servicetask.T2SetupChapterListJavaDelegate">
     </bean>
 
     <!-- Task T3 delegate bean -->
-    <bean id="org.acme.bestpublishing.workflow.servicetask.t3CreateFolderHierarchyDelegate"
+    <bean id="t3CreateFolderHierarchyDelegate"
           parent="org.acme.bestpublishing.workflow.servicetask.baseJavaDelegate"
           class="org.acme.bestpublishing.workflow.servicetask.T3CreateFolderHierarchyDelegate">
     </bean>
 
     <!-- Task T4 delegate bean -->
-    <bean id="org.acme.bestpublishing.workflow.servicetask.t4CheckForContentDelegate"
+    <bean id="t4CheckForContentDelegate"
           parent="org.acme.bestpublishing.workflow.servicetask.baseJavaDelegate"
           class="org.acme.bestpublishing.workflow.servicetask.T4CheckForContentDelegate">
     </bean>
 
     <!-- Task T7 delegate bean -->
-    <bean id="org.acme.bestpublishing.workflow.servicetask.t7MoveContentToChapterFoldersDelegate"
+    <bean id="t7MoveContentToChapterFoldersDelegate"
           parent="org.acme.bestpublishing.workflow.servicetask.baseJavaDelegate"
           class="org.acme.bestpublishing.workflow.servicetask.T7MoveContentToChapterFoldersDelegate">
     </bean>
 
     <!-- Task T9 delegate bean -->
-    <bean id="org.acme.bestpublishing.workflow.servicetask.t9ApplyMetadataToChapterFiles"
+    <bean id="t9ApplyMetadataToChapterFiles"
           parent="org.acme.bestpublishing.workflow.servicetask.baseJavaDelegate"
           class="org.acme.bestpublishing.workflow.servicetask.T9ApplyMetadataToChapterFiles">
     </bean>
