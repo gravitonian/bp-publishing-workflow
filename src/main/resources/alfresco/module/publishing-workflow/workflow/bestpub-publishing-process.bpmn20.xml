@@ -23,7 +23,7 @@
         <!-- Lecture T1 -->
         <userTask id="reviewBookInfoT1Task" name="T1: Review Book Info"
                   activiti:candidateGroups="GROUP_BESTPUB_COLLABORATORS"
-                  activiti:formKey="boppw:reviewBookInfoT1Task">
+                  activiti:formKey="bookpubw:reviewBookInfoT1Task">
             <extensionElements>
                 <activiti:taskListener event="create" class="org.alfresco.repo.workflow.activiti.tasklistener.ScriptTaskListener">
                     <activiti:field name="script">
@@ -89,14 +89,14 @@
 
         <!-- Lecture T2 -->
         <serviceTask id="setupChapterListT2Task" name="T2: Set up chapter list based on Metadata ZIP"
-                     activiti:delegateExpression="${t2SetupChapterListJavaDelegate}"></serviceTask>
+                     activiti:delegateExpression="${T2SetupChapterListJavaDelegate}"></serviceTask>
         <sequenceFlow id="flow5" sourceRef="setupChapterListT2Task"
                       targetRef="createFolderHierarchyWithMetadataT3Task"></sequenceFlow>
         <!-- END Lecture T2 -->
 
         <!-- Lecture T3 -->
         <serviceTask id="createFolderHierarchyWithMetadataT3Task" name="T3: Create Folder Hierarchy with Metadata"
-                     activiti:delegateExpression="${t3CreateFolderHierarchyDelegate}"></serviceTask>
+                     activiti:delegateExpression="${T3CreateFolderHierarchyDelegate}"></serviceTask>
         <sequenceFlow id="metadataComplete" name="Metadata Complete" sourceRef="createFolderHierarchyWithMetadataT3Task" targetRef="joinContentAndMetadata"></sequenceFlow>
         <!-- END Lecture T3 -->
 
@@ -196,7 +196,7 @@
 
         <!-- Lecture T7 + T8 -->
         <serviceTask id="moveContentToChapterFoldersT7Task" name="T7: Move Content To Chapter Folders"
-                     activiti:delegateExpression="${t7MoveContentToChapterFoldersDelegate}"></serviceTask>
+                     activiti:delegateExpression="${T7MoveContentToChapterFoldersDelegate}"></serviceTask>
         <sequenceFlow id="flow15" sourceRef="moveContentToChapterFoldersT7Task" targetRef="isContentMoveCompleteGateway"></sequenceFlow>
         <exclusiveGateway id="isContentMoveCompleteGateway" name="Is Content Move Complete Gateway"></exclusiveGateway>
         <sequenceFlow id="contentMoveComplete" name="Content Complete"
@@ -223,7 +223,7 @@
         <!-- Apply metadata to all book content -->
         <!-- Lecture T9 -->
         <serviceTask id="applyMetadataToAllContentFilesT9Task" name="T9: Apply Metadata to All Content Files"
-                     activiti:delegateExpression="${t9ApplyMetadataToChapterFiles}"></serviceTask>
+                     activiti:delegateExpression="${T9ApplyMetadataToChapterFiles}"></serviceTask>
         <sequenceFlow id="flow14" sourceRef="applyMetadataToAllContentFilesT9Task" targetRef="endevent1"></sequenceFlow>
         <!-- End of Lecture T9 -->
 
