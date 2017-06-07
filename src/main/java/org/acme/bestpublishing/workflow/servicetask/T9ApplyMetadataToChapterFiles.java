@@ -70,8 +70,6 @@ public class T9ApplyMetadataToChapterFiles extends BestPubBaseJavaDelegate {
         NodeRef isbnFolderNodeRef = new NodeRef((String)exec.getVariable(VAR_ISBN_FOLDER_NODEREF));
 
         // Loop through ISBN child folders and classify files in them
-        Set<QName> aspects = new HashSet<>();
-        aspects.add(BestPubContentModel.BookInfoAspect.QNAME);
         List<ChildAssociationRef> childrenList = getServiceRegistry().getNodeService().getChildAssocs(isbnFolderNodeRef);
         for (ChildAssociationRef child: childrenList) {
         	NodeRef childNodeRef = child.getChildRef();
@@ -79,15 +77,15 @@ public class T9ApplyMetadataToChapterFiles extends BestPubBaseJavaDelegate {
         	        childNodeRef, ContentModel.PROP_NAME);
 			QName nodeTypeQName = getServiceRegistry().getNodeService().getType(childNodeRef);
         	if (BestPubContentModel.ChapterFolderType.QNAME.equals(nodeTypeQName)) {
-				aspects.add(BestPubContentModel.ChapterInfoAspect.QNAME);
-        		setFileTypeAndAspects(childNodeRef, aspects, BestPubContentModel.ChapterFileType.QNAME);
+        		setFileTypeAndAspects(childNodeRef, BestPubContentModel.ChapterInfoAspect.QNAME,
+                        BestPubContentModel.ChapterFileType.QNAME);
         	} else if (BestPubConstants.ARTWORK_FOLDER_NAME.equals(childNodeName)) {
-				setFileTypeAndAspects(isbnFolderNodeRef, aspects, BestPubContentModel.ArtworkFileType.QNAME);
+				setFileTypeAndAspects(isbnFolderNodeRef, null, BestPubContentModel.ArtworkFileType.QNAME);
         	} else if (BestPubConstants.SUPPLEMENTARY_FOLDER_NAME.equals(childNodeName)) {
-				setFileTypeAndAspects(isbnFolderNodeRef, aspects, BestPubContentModel.SupplementaryFileType.QNAME);
+				setFileTypeAndAspects(isbnFolderNodeRef, null, BestPubContentModel.SupplementaryFileType.QNAME);
             } else if (BestPubConstants.STYLES_FOLDER_NAME.equals(childNodeName)) {
         	    // Classify style sheets as artwork files
-                setFileTypeAndAspects(isbnFolderNodeRef, aspects, BestPubContentModel.ArtworkFileType.QNAME);
+                setFileTypeAndAspects(isbnFolderNodeRef, null, BestPubContentModel.ArtworkFileType.QNAME);
             } else {
                 LOG.error("Skipping unkown ISBN folder {} {}", childNodeName, processInfo);
         	}
@@ -102,10 +100,18 @@ public class T9ApplyMetadataToChapterFiles extends BestPubBaseJavaDelegate {
      * Sites/book-management/{year}/{isbn}, then change the type and apply aspects.
      * 
      * @param folderNodeRef the node reference for the folder which files we are classifying
-     * @param aspects the aspects that should be copied from the parent folder
+     * @param extraAspect an extra aspect that should be copied from the parent folder, in addition to Book Info aspect
      * @param typeQName the type to set on the files
      */
-    private void setFileTypeAndAspects(NodeRef folderNodeRef, Set<QName> aspects, QName typeQName) {
+    private void setFileTypeAndAspects(NodeRef folderNodeRef, QName extraAspect, QName typeQName) {
+        // All files should have Book Info aspect set
+        Set<QName> aspects = new HashSet<>();
+        aspects.add(BestPubContentModel.BookInfoAspect.QNAME);
+        // Add any extra aspect
+        if (extraAspect != null) {
+            aspects.add(extraAspect);
+        }
+        // Get all the files and loop through, copying aspects
         List<ChildAssociationRef> folderFiles = getServiceRegistry().getNodeService().getChildAssocs(folderNodeRef);
     	for(ChildAssociationRef file: folderFiles) {
 			NodeRef fileNodeRef = file.getChildRef();
