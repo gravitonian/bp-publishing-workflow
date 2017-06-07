@@ -97,14 +97,14 @@
         <!-- Lecture T3 -->
         <serviceTask id="createFolderHierarchyWithMetadataT3Task" name="T3: Create Folder Hierarchy with Metadata"
                      activiti:delegateExpression="${t3CreateFolderHierarchyDelegate}"></serviceTask>
-        <sequenceFlow id="flow6" sourceRef="createFolderHierarchyWithMetadataT3Task" targetRef="joinContentAndMetadata"></sequenceFlow>
+        <sequenceFlow id="metadataComplete" name="Metadata Complete" sourceRef="createFolderHierarchyWithMetadataT3Task" targetRef="joinContentAndMetadata"></sequenceFlow>
         <!-- END Lecture T3 -->
 
         <!--======================================== Content processing route =======================================-->
 
         <!-- Lecture T4 -->
         <serviceTask id="checkForContentFromProductionT4Task" name="T4: Check for Content From Production"
-                     activiti:delegateExpression="${t4CheckForContentDelegate}"></serviceTask>
+                     activiti:delegateExpression="${T4CheckForContentDelegate}"></serviceTask>
         <sequenceFlow id="flow7" sourceRef="checkForContentFromProductionT4Task" targetRef="isContentFoundGateway"></sequenceFlow>
         <exclusiveGateway id="isContentFoundGateway" name="Is Content Found "></exclusiveGateway>
         <sequenceFlow id="contentWasFound" name="Content Was Found" sourceRef="isContentFoundGateway"
@@ -235,7 +235,7 @@
             <bpmndi:BPMNShape bpmnElement="endevent1" id="BPMNShape_endevent1">
                 <omgdc:Bounds height="35.0" width="35.0" x="480.0" y="700.0"></omgdc:Bounds>
             </bpmndi:BPMNShape>
-            <bpmndi:BPMNShape bpmnElement="forProcessingOfContentAndMetadata" id="BPMNShape_forProcessingOfContentAndMetadata">
+            <bpmndi:BPMNShape bpmnElement="forkProcessingOfContentAndMetadata" id="BPMNShape_forkProcessingOfContentAndMetadata">
                 <omgdc:Bounds height="40.0" width="40.0" x="477.0" y="110.0"></omgdc:Bounds>
             </bpmndi:BPMNShape>
             <bpmndi:BPMNShape bpmnElement="alfrescoStartevent1" id="BPMNShape_alfrescoStartevent1">

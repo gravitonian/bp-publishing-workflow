@@ -21,14 +21,12 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans
           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
     <!-- This is filtered by Maven at build time, so that module name is single sourced. -->
-
-    <!-- Note. The workflow-context.xml file has to be loaded before bootstrap-context.xml,
-               otherwise the activiti:delegateExpression bean references will not be available when
-               workflow is bootstrapped -->
-    <!-- Note. The bootstrap-context.xml file has to be loaded before other service beans.
-                Otherwise your custom models are not yet loaded when your service beans are instantiated and you
-                cannot for example register policies on them. -->
+	<!-- Note. The bootstrap-context.xml file has to be loaded first.
+				Otherwise your custom models are not yet loaded when your service beans are instantiated and you
+				cannot for example register policies on them. -->
+    <import resource="classpath:alfresco/module/${project.artifactId}/context/bootstrap-context.xml" />
     <import resource="classpath:alfresco/module/${project.artifactId}/context/workflow-context.xml" />
-	<import resource="classpath:alfresco/module/${project.artifactId}/context/bootstrap-context.xml" />
+
+
 
 </beans>
