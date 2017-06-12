@@ -90,7 +90,11 @@ public class T9ApplyMetadataToChapterFiles extends BestPubBaseJavaDelegate {
                 LOG.error("Skipping unkown folder {} {}", childNodeName, processInfo);
         	}
         }
-        
+
+        // Set processing of metadata and content as completed for the book/ISBN
+        getServiceRegistry().getNodeService().setProperty(
+                isbnFolderNodeRef, BestPubContentModel.BookInfoAspect.Prop.BOOK_PROCESSING_COMPLETE, true );
+
         LOG.debug("Finished T9 - Apply Metadata to chapter folder files {}", processInfo);
 
     }

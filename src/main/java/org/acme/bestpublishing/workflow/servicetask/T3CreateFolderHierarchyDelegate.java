@@ -128,6 +128,7 @@ public class T3CreateFolderHierarchyDelegate extends BestPubBaseJavaDelegate {
         // Set up the new /Company Home/Sites/book-management/documentLibrary/<year>/<isbn> folder with Book Info Aspect,
         // including metadata status for the whole book
         bookInfoAspectProps.put(BookInfoAspect.Prop.BOOK_METADATA_STATUS, bookMetadataStatus.toString());
+        bookInfoAspectProps.put(BookInfoAspect.Prop.BOOK_PROCESSING_COMPLETE, false);
         getServiceRegistry().getNodeService().addAspect(isbnFolderNodeRef, BookInfoAspect.QNAME, bookInfoAspectProps);
 
         // Create the other extra folders
