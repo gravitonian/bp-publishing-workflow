@@ -16,7 +16,6 @@ limitations under the License.
 */
 package org.acme.bestpublishing.workflow.servicetask;
 
-import org.acme.bestpublishing.model.BestPubContentModel;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.alfresco.model.ContentModel;
 import org.alfresco.service.cmr.model.FileInfo;
@@ -35,6 +34,7 @@ import java.util.Properties;
 import static org.acme.bestpublishing.constants.BestPubConstants.*;
 import static org.acme.bestpublishing.model.BestPubMetadataFileModel.*;
 import static org.acme.bestpublishing.model.BestPubWorkflowModel.*;
+import static org.acme.bestpublishing.model.BestPubContentModel.*;
 
 /**
  * Called from a workflow to execute the T3 service task for backlist book (already published book).
@@ -78,49 +78,57 @@ public class T3CreateFolderHierarchyDelegate extends BestPubBaseJavaDelegate {
         // Start by creating the top ISBN folder
         NodeRef publishingYearNodeRef = bestPubUtilsService.getBaseFolderForBooks();
         NodeRef isbnFolderNodeRef = getServiceRegistry().getFileFolderService().create(
-                publishingYearNodeRef, isbn, BestPubContentModel.BookFolderType.QNAME).getNodeRef();
+                publishingYearNodeRef, isbn, BookFolderType.QNAME).getNodeRef();
         LOG.debug("Created ISBN folder {} {}",
                 alfrescoRepoUtilsService.getDisplayPathForNode(isbnFolderNodeRef), processInfo);
 
-        // Set up the new /Company Home/Sites/book-management/documentLibrary/<year>/<isbn> folder with Book Info Aspect
+        // Set up the Book Info Aspect so it can be set on folders
         Map<QName, Serializable> bookInfoAspectProps = new HashMap<>();
-        bookInfoAspectProps.put(BestPubContentModel.BookInfoAspect.Prop.ISBN, isbn);
-        bookInfoAspectProps.put(BestPubContentModel.BookInfoAspect.Prop.BOOK_TITLE,
-                bookInfo.getProperty(BOOK_METADATA_TITLE_PROP_NAME));
-        bookInfoAspectProps.put(BestPubContentModel.BookInfoAspect.Prop.BOOK_GENRE_NAME,
-                bookInfo.getProperty(BOOK_METADATA_GENRE_PROP_NAME));
-        bookInfoAspectProps.put(BestPubContentModel.BookInfoAspect.Prop.BOOK_NUMBER_OF_CHAPTERS,
-                bookInfo.getProperty(BOOK_METADATA_NR_OF_CHAPTERS_PROP_NAME));
-        bookInfoAspectProps.put(BestPubContentModel.BookInfoAspect.Prop.BOOK_NUMBER_OF_PAGES,
-                bookInfo.getProperty(BOOK_METADATA_NR_OF_PAGES_PROP_NAME));
-        bookInfoAspectProps.put(BestPubContentModel.BookInfoAspect.Prop.BOOK_METADATA_STATUS,
-                BestPubContentModel.BookMetadataStatus.MISSING.toString());
-        getServiceRegistry().getNodeService().addAspect(
-                isbnFolderNodeRef, BestPubContentModel.BookInfoAspect.QNAME, bookInfoAspectProps);
+        bookInfoAspectProps.put(BookInfoAspect.Prop.ISBN, isbn);
+        bookInfoAspectProps.put(BookInfoAspect.Prop.BOOK_TITLE, bookInfo.getProperty(BOOK_METADATA_TITLE_PROP_NAME));
+        bookInfoAspectProps.put(BookInfoAspect.Prop.BOOK_GENRE_NAME, bookInfo.getProperty(BOOK_METADATA_GENRE_PROP_NAME));
+        bookInfoAspectProps.put(BookInfoAspect.Prop.BOOK_AUTHORS_NAME, bookInfo.getProperty(BOOK_METADATA_AUTHORS_PROP_NAME));
+        bookInfoAspectProps.put(BookInfoAspect.Prop.BOOK_NUMBER_OF_CHAPTERS, bookInfo.getProperty(BOOK_METADATA_NR_OF_CHAPTERS_PROP_NAME));
+        bookInfoAspectProps.put(BookInfoAspect.Prop.BOOK_NUMBER_OF_PAGES, bookInfo.getProperty(BOOK_METADATA_NR_OF_PAGES_PROP_NAME));
+        BookMetadataStatus bookMetadataStatus = BookMetadataStatus.COMPLETED;
 
         // Now create all the chapter sub-folders under the new ISBN folder with chapter metadata
         for (Properties chapterInfo: chapterList) {
             String chapterFolderName = bestPubUtilsService.getChapterFolderName(
-                    (Integer)chapterInfo.get(CHAPTER_METADATA_NUMBER_PROP_NAME));
+                    Integer.parseInt(chapterInfo.getProperty(CHAPTER_METADATA_NUMBER_PROP_NAME)));
             FileInfo chapterFileInfo = getServiceRegistry().getFileFolderService().create(
-                    isbnFolderNodeRef, chapterFolderName, BestPubContentModel.ChapterFolderType.QNAME);
+                    isbnFolderNodeRef, chapterFolderName, ChapterFolderType.QNAME);
+
+            // Set up chapter metadata status
+            ChapterMetadataStatus chapterMetadataStatus = ChapterMetadataStatus.COMPLETED;
+            String chapterNumber = chapterInfo.getProperty(CHAPTER_METADATA_NUMBER_PROP_NAME);
+            String chapterTitle = chapterInfo.getProperty(CHAPTER_METADATA_TITLE_PROP_NAME);
+            String chapterAuthor = chapterInfo.getProperty(CHAPTER_METADATA_AUTHOR_PROP_NAME);
+            if (StringUtils.isBlank(chapterNumber) ||
+                    StringUtils.isBlank(chapterTitle) ||
+                    StringUtils.isBlank(chapterAuthor)) {
+                chapterMetadataStatus = ChapterMetadataStatus.MISSING;
+                bookMetadataStatus = BookMetadataStatus.PARTIAL;
+            }
+
+            // Set aspects on the new chapter folder
+            Map<QName, Serializable> chapterMetadataAspectProps = new HashMap<>();
+            chapterMetadataAspectProps.put(ChapterInfoAspect.Prop.CHAPTER_NUMBER, chapterNumber);
+            chapterMetadataAspectProps.put(ChapterInfoAspect.Prop.CHAPTER_TITLE, chapterTitle);
+            chapterMetadataAspectProps.put(ChapterInfoAspect.Prop.CHAPTER_AUTHOR_NAME, chapterAuthor);
+            chapterMetadataAspectProps.put(ChapterInfoAspect.Prop.CHAPTER_METADATA_STATUS, chapterMetadataStatus.toString());
+            getServiceRegistry().getNodeService().addAspect(chapterFileInfo.getNodeRef(), BookInfoAspect.QNAME, bookInfoAspectProps);
+            getServiceRegistry().getNodeService().addAspect(chapterFileInfo.getNodeRef(), ChapterInfoAspect.QNAME, chapterMetadataAspectProps);
+
             LOG.debug("Created chapter folder {} [chapterTitle={}] {}",
                     new Object[]{alfrescoRepoUtilsService.getDisplayPathForNode(chapterFileInfo.getNodeRef()),
                             chapterInfo.get(CHAPTER_METADATA_TITLE_PROP_NAME), processInfo});
-            Map<QName, Serializable> chapterMetadataAspectProps = new HashMap<QName, Serializable>();
-            chapterMetadataAspectProps.put(BestPubContentModel.ChapterInfoAspect.Prop.CHAPTER_NUMBER,
-                    chapterInfo.getProperty(CHAPTER_METADATA_NUMBER_PROP_NAME));
-            chapterMetadataAspectProps.put(BestPubContentModel.ChapterInfoAspect.Prop.CHAPTER_TITLE,
-                    chapterInfo.getProperty(CHAPTER_METADATA_TITLE_PROP_NAME));
-            chapterMetadataAspectProps.put(BestPubContentModel.ChapterInfoAspect.Prop.CHAPTER_AUTHOR_NAME,
-                    chapterInfo.getProperty(CHAPTER_METADATA_AUTHOR_PROP_NAME));
-            chapterMetadataAspectProps.put(BestPubContentModel.ChapterInfoAspect.Prop.CHAPTER_METADATA_STATUS,
-                    BestPubContentModel.ChapterMetadataStatus.COMPLETED.toString());
-            getServiceRegistry().getNodeService().addAspect(
-                    chapterFileInfo.getNodeRef(), BestPubContentModel.BookInfoAspect.QNAME, bookInfoAspectProps);
-            getServiceRegistry().getNodeService().addAspect(
-                    chapterFileInfo.getNodeRef(), BestPubContentModel.ChapterInfoAspect.QNAME, chapterMetadataAspectProps);
         }
+
+        // Set up the new /Company Home/Sites/book-management/documentLibrary/<year>/<isbn> folder with Book Info Aspect,
+        // including metadata status for the whole book
+        bookInfoAspectProps.put(BookInfoAspect.Prop.BOOK_METADATA_STATUS, bookMetadataStatus.toString());
+        getServiceRegistry().getNodeService().addAspect(isbnFolderNodeRef, BookInfoAspect.QNAME, bookInfoAspectProps);
 
         // Create the other extra folders
         createExtraFolder(isbnFolderNodeRef, ARTWORK_FOLDER_NAME, bookInfoAspectProps, processInfo);
@@ -136,6 +144,14 @@ public class T3CreateFolderHierarchyDelegate extends BestPubBaseJavaDelegate {
         LOG.debug("Finished T3 - Creating chapter folder hierarchy {}", processInfo);
     }
 
+    /**
+     * Helper method to create some non-chapter folders
+     *
+     * @param isbnFolderNodeRef the ISBN folder node ref where the folder should be created
+     * @param folderName the name of the new folder
+     * @param bookInfoAspectProps the book info aspect properties
+     * @param processInfo process information for logging purpose
+     */
     private void createExtraFolder(NodeRef isbnFolderNodeRef, String folderName,
                                    Map<QName, Serializable> bookInfoAspectProps, String processInfo) {
         // Create the folder as standard general folder type
@@ -146,6 +162,6 @@ public class T3CreateFolderHierarchyDelegate extends BestPubBaseJavaDelegate {
 
         // Add basic book info metadata to folder
         getServiceRegistry().getNodeService().addAspect(
-                folderFileInfo.getNodeRef(), BestPubContentModel.BookInfoAspect.QNAME, bookInfoAspectProps);
+                folderFileInfo.getNodeRef(), BookInfoAspect.QNAME, bookInfoAspectProps);
     }
 }
