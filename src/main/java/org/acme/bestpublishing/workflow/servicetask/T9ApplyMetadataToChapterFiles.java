@@ -64,7 +64,7 @@ public class T9ApplyMetadataToChapterFiles extends BestPubBaseJavaDelegate {
 
         String processInfo = getProcInfo(exec, isbn);
 
-        LOG.debug("T9 - Apply Metadata to chapter folders {}", processInfo);
+        LOG.debug("T9 - Apply Metadata to chapter folder files {}", processInfo);
 
         // Get the ISBN Folder Node Reference
         NodeRef isbnFolderNodeRef = new NodeRef((String)exec.getVariable(VAR_ISBN_FOLDER_NODEREF));
@@ -80,18 +80,18 @@ public class T9ApplyMetadataToChapterFiles extends BestPubBaseJavaDelegate {
         		setFileTypeAndAspects(childNodeRef, BestPubContentModel.ChapterInfoAspect.QNAME,
                         BestPubContentModel.ChapterFileType.QNAME);
         	} else if (BestPubConstants.ARTWORK_FOLDER_NAME.equals(childNodeName)) {
-				setFileTypeAndAspects(isbnFolderNodeRef, null, BestPubContentModel.ArtworkFileType.QNAME);
+				setFileTypeAndAspects(childNodeRef, null, BestPubContentModel.ArtworkFileType.QNAME);
         	} else if (BestPubConstants.SUPPLEMENTARY_FOLDER_NAME.equals(childNodeName)) {
-				setFileTypeAndAspects(isbnFolderNodeRef, null, BestPubContentModel.SupplementaryFileType.QNAME);
+				setFileTypeAndAspects(childNodeRef, null, BestPubContentModel.SupplementaryFileType.QNAME);
             } else if (BestPubConstants.STYLES_FOLDER_NAME.equals(childNodeName)) {
         	    // Classify style sheets as artwork files
-                setFileTypeAndAspects(isbnFolderNodeRef, null, BestPubContentModel.ArtworkFileType.QNAME);
+                setFileTypeAndAspects(childNodeRef, null, BestPubContentModel.ArtworkFileType.QNAME);
             } else {
-                LOG.error("Skipping unkown ISBN folder {} {}", childNodeName, processInfo);
+                LOG.error("Skipping unkown folder {} {}", childNodeName, processInfo);
         	}
         }
         
-        LOG.debug("Finished T9 - Apply Metadata to chapter folders {}", processInfo);
+        LOG.debug("Finished T9 - Apply Metadata to chapter folder files {}", processInfo);
 
     }
 

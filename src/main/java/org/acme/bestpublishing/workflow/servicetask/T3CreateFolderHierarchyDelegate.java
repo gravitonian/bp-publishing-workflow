@@ -100,8 +100,8 @@ public class T3CreateFolderHierarchyDelegate extends BestPubBaseJavaDelegate {
 
         // Now create all the chapter sub-folders under the new ISBN folder with chapter metadata
         for (Properties chapterInfo: chapterList) {
-            String chapterFolderName = CHAPTER_FOLDER_NAME_PREFIX + "-" +
-                    chapterInfo.get(CHAPTER_METADATA_NUMBER_PROP_NAME);
+            String chapterFolderName = bestPubUtilsService.getChapterFolderName(
+                    (Integer)chapterInfo.get(CHAPTER_METADATA_NUMBER_PROP_NAME));
             FileInfo chapterFileInfo = getServiceRegistry().getFileFolderService().create(
                     isbnFolderNodeRef, chapterFolderName, BestPubContentModel.ChapterFolderType.QNAME);
             LOG.debug("Created chapter folder {} [chapterTitle={}] {}",
@@ -115,7 +115,7 @@ public class T3CreateFolderHierarchyDelegate extends BestPubBaseJavaDelegate {
             chapterMetadataAspectProps.put(BestPubContentModel.ChapterInfoAspect.Prop.CHAPTER_AUTHOR_NAME,
                     chapterInfo.getProperty(CHAPTER_METADATA_AUTHOR_PROP_NAME));
             chapterMetadataAspectProps.put(BestPubContentModel.ChapterInfoAspect.Prop.CHAPTER_METADATA_STATUS,
-                    BestPubContentModel.ChapterMetadataStatus.MISSING.toString());
+                    BestPubContentModel.ChapterMetadataStatus.COMPLETED.toString());
             getServiceRegistry().getNodeService().addAspect(
                     chapterFileInfo.getNodeRef(), BestPubContentModel.BookInfoAspect.QNAME, bookInfoAspectProps);
             getServiceRegistry().getNodeService().addAspect(
