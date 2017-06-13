@@ -44,6 +44,8 @@ import static org.acme.bestpublishing.model.BestPubWorkflowModel.*;
 public class T7MoveContentToChapterFoldersDelegate extends BestPubBaseJavaDelegate {
 	private static final Logger LOG = LoggerFactory.getLogger(T7MoveContentToChapterFoldersDelegate.class);
 
+	public static final String EPUB_PACKAGE_FILE_FILENAME = "package.opf";
+
 	/**
 	 * Interface Implementation
 	 */
@@ -117,6 +119,19 @@ public class T7MoveContentToChapterFoldersDelegate extends BestPubBaseJavaDelega
 			LOG.error("Destination folder [{}] not found, cannot move content {}", 
 					bestPubUtilsService.getBookManagementSiteDocLibPath() + "/{year}/" + isbn, processInfo);
 			return;
+		}
+
+		// Move the package.opf file that contains the layout of the EPub book
+		NodeRef epubPackageFileNodeRef = alfrescoRepoUtilsService.getChildByName(
+				sourceIsbnFolderNodeRef, EPUB_PACKAGE_FILE_FILENAME);
+		if (epubPackageFileNodeRef != null) {
+			getServiceRegistry().getNodeService().moveNode(
+					epubPackageFileNodeRef, destIsbnFolderNodeRef, ContentModel.ASSOC_CONTAINS,
+					QName.createQName(NamespaceService.CONTENT_MODEL_1_0_URI, EPUB_PACKAGE_FILE_FILENAME));
+			LOG.debug("Moved [{}] to ISBN folder {}", EPUB_PACKAGE_FILE_FILENAME, processInfo);
+		} else {
+			LOG.error("EPub " + EPUB_PACKAGE_FILE_FILENAME +
+							" file with book layout is missing in incoming content folder [{}] {}",	isbn, processInfo);
 		}
 
 		// Move chapter files from the /Chapters folder into related chapter folders
