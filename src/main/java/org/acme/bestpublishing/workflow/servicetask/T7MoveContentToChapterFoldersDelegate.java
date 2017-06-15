@@ -44,8 +44,6 @@ import static org.acme.bestpublishing.model.BestPubWorkflowModel.*;
 public class T7MoveContentToChapterFoldersDelegate extends BestPubBaseJavaDelegate {
 	private static final Logger LOG = LoggerFactory.getLogger(T7MoveContentToChapterFoldersDelegate.class);
 
-	public static final String EPUB_PACKAGE_FILE_FILENAME = "package.opf";
-
 	/**
 	 * Interface Implementation
 	 */
