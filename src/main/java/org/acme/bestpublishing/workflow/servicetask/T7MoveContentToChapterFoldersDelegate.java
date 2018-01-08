@@ -35,7 +35,7 @@ import static org.acme.bestpublishing.model.BestPubWorkflowModel.*;
 /**
  * Called from a workflow to execute the T7 service task to move content from the incoming folder to the
  * book management site and the ISBN's chapter folders, artwork folder, supplementary folder, and styles folder.
- * <p/>
+ *
  * Assumption: All content for the ISBN has been imported successfully to Alfresco by the Content Ingestion component.
  *
  * @author martin.bergljung@marversolutions.org
